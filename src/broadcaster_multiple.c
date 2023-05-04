@@ -371,12 +371,12 @@ int broadcaster_multiple(void)
 			// printk("UART data received.\n");
 			if(buf->data[0] == 1 && buf->data[1] == 2){ 	// Parse protocol version = 1 and message ID = 2(CAM)
 				// printk("corect data.\n");
-				if(RECEIVED_DATA_SIZE >=  buf->len){
+				if(BLE_ARRAY_MAX >=  buf->len){
 					for (size_t i = 0; i < buf->len; i++) {
 						mfg_data[i+2] = buf->data[i];
 					}
 				} else {
-					for (size_t i = 0; i < RECEIVED_DATA_SIZE; i++) {
+					for (size_t i = 0; i < BLE_ARRAY_MAX; i++) {
 						mfg_data[i+2] = buf->data[i];
 					}				
 				}

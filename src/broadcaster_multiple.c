@@ -370,7 +370,7 @@ int broadcaster_multiple(void)
 		if(buf){
 			// printk("UART data received.\n");
 			if(buf->data[0] == 1 && buf->data[1] == 2){ 	// Parse protocol version = 1 and message ID = 2(CAM)
-				// printk("corect data.\n");
+				printk("buflen %d\n", buf->len);
 				if(BLE_ARRAY_MAX >=  buf->len){
 					for (size_t i = 0; i < buf->len; i++) {
 						mfg_data[i+2] = buf->data[i];

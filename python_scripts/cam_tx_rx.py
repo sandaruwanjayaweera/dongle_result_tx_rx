@@ -229,9 +229,11 @@ def main(args=None):
 				time.sleep(0.05)
 				# print(ser.read(BLE_ARRAY_MAX - OFFSET))
 			else:
-				print(ser.read(63))
+				print(ser.readline())
+				time.sleep(0.05)
 		else:
 			# print('No data bc_ref_pos_longitude %d', bc_ref_pos_longitude)
+			time.sleep(0.05)
 			continue
 
 	ser.close()

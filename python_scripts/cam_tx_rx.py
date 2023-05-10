@@ -7,7 +7,7 @@ def main(args=None):
 	BLE_ARRAY_MAX 		= 227
 	CAM_LEN 			= 65
 	OFFSET 				= 3
-	ser 				= serial.Serial('COM4', 115200)
+	ser 				= serial.Serial('/dev/ttyTH0', 115200)
 	bc_ref_pos_lattitude 	= 1
 
 	while True:

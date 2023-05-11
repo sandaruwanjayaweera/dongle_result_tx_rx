@@ -19,7 +19,7 @@ def main(args=None):
 		if(uart_flag == 255):
 			uart_flag = 0
 		else:
-			uart_flag++
+			uart_flag += 1
 		uart_flag_2 		= 255 - uart_flag
 
 		pdu_proto_version 	= 1

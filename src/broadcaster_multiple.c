@@ -389,7 +389,11 @@ int broadcaster_multiple(void)
 		ring_buf_get(&uart_rx_ringbuf, buf, sizeof(buf));
 		uart_rx_fill -= (RECEIVED_DATA_SIZE - 3);
 
-		printk("UART data %d %d \n", buf[8], uart_rx_fill);
+		bc_ref_pos_lattitude.bit_8[3] 					= buf[5];
+		bc_ref_pos_lattitude.bit_8[2] 					= buf[6];
+		bc_ref_pos_lattitude.bit_8[1] 					= buf[7];
+		bc_ref_pos_lattitude.bit_8[0]					= buf[8];
+		printk("UART data %u %d \n", bc_ref_pos_lattitude.bit_32, uart_rx_fill);
 		for (size_t i = 0; i < (RECEIVED_DATA_SIZE - 3); i++) {
 			mfg_data[i+2] = buf[i];
 		}

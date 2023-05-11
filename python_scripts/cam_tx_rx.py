@@ -5,7 +5,7 @@ import time
 def main(args=None):
 
 	BLE_ARRAY_MAX 		= 227
-	CAM_LEN 			= 65
+	CAM_LEN 			= 65 		# length of CAM datafields
 	OFFSET 				= 3
 	ser 				= serial.Serial('/dev/ttyTHS0', 115200)
 	bc_ref_pos_lattitude 	= 1
@@ -14,7 +14,7 @@ def main(args=None):
 #_____________________________________(Tx)___________________________________________
 
 		ser.reset_output_buffer()
-		uart_len 			= 65
+		uart_len 			= CAM_LEN + 1; 	# CAM length + uart flag
 		uart_flag 			= 255
 
 		pdu_proto_version 	= 1
@@ -104,7 +104,7 @@ def main(args=None):
 		result 				= ser.write(string)
 		# print(result)
 		bc_ref_pos_lattitude 	+= 1
-		time.sleep(0.05)
+		time.sleep(0.5)
 #_____________________________________(Rx)___________________________________________
 
 		if(ser.inWaiting() > 0):

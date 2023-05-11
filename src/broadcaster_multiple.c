@@ -379,22 +379,23 @@ int broadcaster_multiple(void)
 	}
 
 	ring_buf_get(&uart_rx_ringbuf, &uart_flag, sizeof(uart_flag));
+	ring_buf_get(&uart_rx_ringbuf, &uart_flag_2, sizeof(uart_flag_2));
 	ring_buf_get(&uart_rx_ringbuf, &pdu_proto_version, sizeof(pdu_proto_version));
 	ring_buf_get(&uart_rx_ringbuf, &pdu_message_id, sizeof(pdu_message_id));
-	uart_rx_fill -= 3;
+	uart_rx_fill -= 4;
 
 	// printk("UART data %d %d %d \n", pdu_proto_version, pdu_message_id, uart_rx_fill);
-	if(uart_flag == 255 && pdu_proto_version == 1 && pdu_message_id == 2){ 	// Parse protocol version = 1 and message ID = 2(CAM)
-		uint8_t buf[RECEIVED_DATA_SIZE - 3];
+	if(uart_flag_2 == (255-uart_flag) && pdu_proto_version == 1 && pdu_message_id == 2){ 	// Parse protocol version = 1 and message ID = 2(CAM)
+		uint8_t buf[RECEIVED_DATA_SIZE - 4];
 		ring_buf_get(&uart_rx_ringbuf, buf, sizeof(buf));
-		uart_rx_fill -= (RECEIVED_DATA_SIZE - 3);
+		uart_rx_fill -= (RECEIVED_DATA_SIZE - 4);
 
 		bc_ref_pos_lattitude.bit_8[3] 					= buf[5];
 		bc_ref_pos_lattitude.bit_8[2] 					= buf[6];
 		bc_ref_pos_lattitude.bit_8[1] 					= buf[7];
 		bc_ref_pos_lattitude.bit_8[0]					= buf[8];
 		printk("UART data %u %d \n", bc_ref_pos_lattitude.bit_32, uart_rx_fill);
-		for (size_t i = 0; i < (RECEIVED_DATA_SIZE - 3); i++) {
+		for (size_t i = 0; i < (RECEIVED_DATA_SIZE - 4); i++) {
 			mfg_data[i+2] = buf[i];
 		}
 

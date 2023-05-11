@@ -3,7 +3,7 @@
 /* UART payload buffer element size. */
 #define BLE_ARRAY_MAX 227
 #define UART_BUF_SIZE 600 //cannot use 2 powers for some reason
-#define RECEIVED_DATA_SIZE 66 		// the information which is valueable and which can be used
+#define RECEIVED_DATA_SIZE 67 		// the information which is valueable and which can be used
 
 #define NAME_LEN 30
 
@@ -12,6 +12,7 @@
 #define STATE_BROADCAST 2
 
 uint8_t 	uart_flag 						= 0;
+uint8_t 	uart_flag_2 					= 0;
 uint8_t 	pdu_proto_version 				= 4;
 uint8_t  	pdu_message_id 					= 2;
 union 	pdu_src_station_id_t{

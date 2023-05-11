@@ -10,6 +10,7 @@
 #include <zephyr/bluetooth/hci.h>
 #include <zephyr/bluetooth/hci_vs.h>
 #include <zephyr/settings/settings.h>
+#include <zephyr/sys/ring_buffer.h>
 #include "cam.h"
 
 #include <zephyr/drivers/uart.h>
@@ -29,6 +30,8 @@ struct uart_data_t {
 
 static K_FIFO_DEFINE(fifo_uart_tx_data);
 static K_FIFO_DEFINE(fifo_uart_rx_data);
+
+RING_BUF_DECLARE(uart_rx_ringbuf, 256);
 
 uint8_t  mac[BT_ADDR_SIZE] = { 0x46, 0xb3, 0x1d, 0xc2, 0x45, 0xf2 };
 
@@ -92,7 +95,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 
 	switch (evt->type) {
 	case UART_TX_DONE:
-		// printk("UART_TX_DONE\n");
+		// printk("TX_DONE\n");
 		if ((evt->data.tx.len == 0) ||
 		    (!evt->data.tx.buf)) {
 			return;
@@ -117,16 +120,16 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 		}
 
 		if (uart_tx(uart, buf->data, buf->len, SYS_FOREVER_MS)) {
-			// printk("Failed to send data over UART\n");
+			printk("TX_DONE Failed\n");
 		}
 
 		break;
 
 	case UART_RX_RDY:
-		// printk("UART_RX_RDY\n");
+		// printk("RX_RDY %d\n", buf->len);
 		buf = CONTAINER_OF(evt->data.rx.buf, struct uart_data_t, data);
 		buf->len += evt->data.rx.len;
-
+		// printk("RX_RDY %d rx %d\n", buf->len, evt->data.rx.len);
 		if (disable_req) {
 			return;
 		}
@@ -140,14 +143,14 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 		break;
 
 	case UART_RX_DISABLED:
-		// printk("UART_RX_DISABLED\n");
+		// printk("RX_DISABLED\n");
 		disable_req = false;
 
 		buf = k_malloc(sizeof(*buf));
 		if (buf) {
 			buf->len = 0;
 		} else {
-			// printk("Not able to allocate UART receive buffer. size = %d\n", sizeof(*buf));
+			printk("RX_DISABLED Not size = %d\n", sizeof(*buf));
 			k_work_reschedule(&uart_work, UART_WAIT_FOR_BUF_DELAY);
 			return;
 		}
@@ -158,22 +161,23 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 		break;
 
 	case UART_RX_BUF_REQUEST:
-		// printk("UART_RX_BUF_REQUEST\n");
+		// printk("RX_BUF_REQUEST\n");
 		buf = k_malloc(sizeof(*buf));
+		// printk("RX_BUF_REQUEST %d\n", sizeof(*buf));
 		if (buf) {
 			buf->len = 0;
 			uart_rx_buf_rsp(uart, buf->data, sizeof(buf->data));
 		} else {
-			// printk("UART_RX_BUF_REQUEST Not able to allocate UART receive buffer size %d\n", sizeof(*buf));
+			printk("RX_BUF_REQUEST Not size %d\n", sizeof(*buf));
 		}
 
 		break;
 
 	case UART_RX_BUF_RELEASED:
-		// printk("UART_RX_BUF_RELEASED\n");
+		// printk("RX_BUF_RELEASED %d\n", buf->len);
 		buf = CONTAINER_OF(evt->data.rx_buf.buf, struct uart_data_t,
 				   data);
-
+		// printk("RX_BUF_RELEASED %d\n", buf->len);
 		if (buf->len > 0) {
 			k_fifo_put(&fifo_uart_rx_data, buf);
 		} else {
@@ -183,7 +187,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 		break;
 
 	case UART_TX_ABORTED:
-		// printk("UART_TX_ABORTED\n");
+		// printk("TX_ABORTED\n");
 		if (!aborted_buf) {
 			aborted_buf = (uint8_t *)evt->data.tx.buf;
 		}
@@ -363,73 +367,52 @@ int broadcaster_multiple(void)
 		return err;
 	}
 	// printk("Created advertising set.\n");
-
+	int uart_rx_fill = 0;
 	for (;;) {
 //_________________________________________________(Tx)_________________________________________________________________
+
+	while(uart_rx_fill < RECEIVED_DATA_SIZE){
 		struct uart_data_t *buf = k_fifo_get(&fifo_uart_rx_data, K_FOREVER);
-		if(buf){
-			// printk("UART data received.\n");
-			if(buf->data[0] == 1 && buf->data[1] == 2){ 	// Parse protocol version = 1 and message ID = 2(CAM)
-				printk("buflen %d\n", buf->len);
-				if(BLE_ARRAY_MAX >=  buf->len){
-					for (size_t i = 0; i < buf->len; i++) {
-						mfg_data[i+2] = buf->data[i];
-					}
-				} else {
-					for (size_t i = 0; i < BLE_ARRAY_MAX; i++) {
-						mfg_data[i+2] = buf->data[i];
-					}				
-				}
-				k_free(buf);
-				err = bt_le_ext_adv_set_data(adv, ad, ARRAY_SIZE(ad), NULL, 0);
-				if (err) {
-					printk("Failed to set advertising data for set (err %d)\n", err);
-				}
+		ring_buf_put(&uart_rx_ringbuf, buf, buf->len);
+		k_free(buf);
+		uart_rx_fill += buf->len;
+	}
 
-				err = bt_le_ext_adv_start(adv, BT_LE_EXT_ADV_START_DEFAULT);
-				if (err) {
-					printk("Failed to start extended advertising set (err %d)\n", err);
-				}
-				
-				k_sleep(K_MSEC(20)); 	// stable 100 ms
+	ring_buf_get(&uart_rx_ringbuf, &uart_flag, sizeof(uart_flag));
+	ring_buf_get(&uart_rx_ringbuf, &pdu_proto_version, sizeof(pdu_proto_version));
+	ring_buf_get(&uart_rx_ringbuf, &pdu_message_id, sizeof(pdu_message_id));
+	uart_rx_fill -= 3;
 
-				bt_le_ext_adv_stop(adv);
-				if (err) {
-					printk("Advertising failed to stop (err %d)\n", err);
-				}
-			} else {
-				k_free(buf);
-				// printk("bad data.\n");
-				err = bt_le_ext_adv_set_data(adv, ad, ARRAY_SIZE(ad), NULL, 0);
-				if (err) {
-					printk("Failed to set advertising data for set (err %d)\n", err);
-					return err;
-				}
+	// printk("UART data %d %d %d \n", pdu_proto_version, pdu_message_id, uart_rx_fill);
+	if(uart_flag == 255 && pdu_proto_version == 1 && pdu_message_id == 2){ 	// Parse protocol version = 1 and message ID = 2(CAM)
+		uint8_t buf[RECEIVED_DATA_SIZE - 3];
+		ring_buf_get(&uart_rx_ringbuf, buf, sizeof(buf));
+		uart_rx_fill -= (RECEIVED_DATA_SIZE - 3);
 
-				err = bt_le_ext_adv_start(adv, BT_LE_EXT_ADV_START_DEFAULT);
-				if (err) {
-					printk("Failed to start extended advertising set (err %d)\n", err);
-					return err;
-				}
-				k_sleep(K_MSEC(20)); 	// stable 100 ms
-				bt_le_ext_adv_stop(adv);
-				if (err) {
-					printk("Advertising failed to stop (err %d)\n", err);
-					return err;
-				}
-			}
-		} else{
-			// printk("No data.\n");
+		printk("UART data %d %d \n", buf[8], uart_rx_fill);
+		for (size_t i = 0; i < (RECEIVED_DATA_SIZE - 3); i++) {
+			mfg_data[i+2] = buf[i];
 		}
-//_________________________________________________(Rx)_________________________________________________________________
-		// err = bt_le_scan_start(&scan_param, device_found);
-		// if (err) {
-		// 	printk("Start scanning failed (err %d)\n", err);
-		// 	return err;
-		// }
-		// // printk("Started scanning...\n");
-		// k_sleep(K_MSEC(10));
-		// err = bt_le_scan_stop();
+
+		err = bt_le_ext_adv_set_data(adv, ad, ARRAY_SIZE(ad), NULL, 0);
+		if (err) {
+			printk("Failed to set advertising data for set (err %d)\n", err);
+		}
+
+		err = bt_le_ext_adv_start(adv, BT_LE_EXT_ADV_START_DEFAULT);
+		if (err) {
+			printk("Failed to start extended advertising set (err %d)\n", err);
+		}
+		
+		k_sleep(K_MSEC(20)); 	// stable 100 ms
+
+		bt_le_ext_adv_stop(adv);
+		if (err) {
+			printk("Advertising failed to stop (err %d)\n", err);
+		}
+	} else {
+		continue;
+	}
 
 	}
 

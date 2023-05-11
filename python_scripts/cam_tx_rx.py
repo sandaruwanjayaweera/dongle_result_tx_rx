@@ -15,6 +15,7 @@ def main(args=None):
 
 		ser.reset_output_buffer()
 		uart_len 			= 65
+		uart_flag 			= 255
 
 		pdu_proto_version 	= 1
 		pdu_message_id 		= 2
@@ -58,6 +59,7 @@ def main(args=None):
 
 		string 				= b''
 
+		string += struct.pack('!B',uart_flag)
 		string += struct.pack('!B',pdu_proto_version)
 		string += struct.pack('!B',pdu_message_id)
 		string += struct.pack('!I',pdu_src_station_id)
@@ -68,7 +70,7 @@ def main(args=None):
 		string += struct.pack('!H',bc_ref_pos_conf_ellipse_semi_minor)
 		string += struct.pack('!H',bc_ref_pos_altitude_heading)
 		string += struct.pack('!I',bc_ref_pos_altitude_val)
-		string += struct.pack('!B',bc_ref_pos_altitude_conf) 				# 26
+		string += struct.pack('!B',bc_ref_pos_altitude_conf) 				# 27
 
 		string += struct.pack('!H',hf_heading_val)
 		string += struct.pack('!B',hf_heading_conf)
@@ -92,10 +94,10 @@ def main(args=None):
 		string += struct.pack('!H',hf_lat_acc_val)
 		string += struct.pack('!B',hf_lat_acc_conf)
 		string += struct.pack('!H',hf_vertical_acc_val)
-		string += struct.pack('!B',hf_vertical_acc_conf) 					# 62
+		string += struct.pack('!B',hf_vertical_acc_conf) 					# 63
 
 		string += struct.pack('!H',uav_safetyarearadius)
-		string += struct.pack('!B',uav_pathhistory_len) 					# 65
+		string += struct.pack('!B',uav_pathhistory_len) 					# 66
 
 		string += struct.pack('c',b'\r')
 		# print(string)

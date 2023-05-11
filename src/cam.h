@@ -3,7 +3,7 @@
 /* UART payload buffer element size. */
 #define BLE_ARRAY_MAX 227
 #define UART_BUF_SIZE 600 //cannot use 2 powers for some reason
-#define RECEIVED_DATA_SIZE 65 		// the information which is valueable and which can be used
+#define RECEIVED_DATA_SIZE 66 		// the information which is valueable and which can be used
 
 #define NAME_LEN 30
 
@@ -11,6 +11,7 @@
 #define STATE_SCAN 1
 #define STATE_BROADCAST 2
 
+uint8_t 	uart_flag 						= 0;
 uint8_t 	pdu_proto_version 				= 4;
 uint8_t  	pdu_message_id 					= 2;
 union 	pdu_src_station_id_t{
@@ -114,7 +115,7 @@ union uav_safetyarearadius_t{
 } uav_safetyarearadius 					        = { .bit_16 = 0 };
 uint8_t uav_pathhistory_len 					= 0;
 
-uint8_t mfg_data[BLE_ARRAY_MAX + 2] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 	// 1
+uint8_t mfg_data[BLE_ARRAY_MAX + 2] = { 0x01, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 	// 1
 						0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 	// 2
 						0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 	// 3
 						0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 	// 4

@@ -80,7 +80,7 @@ def main(args=None):
 
 		string += struct.pack('c',b'\r')
 		result 				= ser.write(string)
-		time.sleep(0.03)
+		time.sleep(0.05)
 
 		string 				= b''
 		string += struct.pack('!B',uart_flag)
@@ -125,7 +125,7 @@ def main(args=None):
 		bc_ref_pos_lattitude 	+= 1
 		# print(string)
 		# print(result)
-		time.sleep(0.03)
+		time.sleep(0.05)
 #_____________________________________(Rx)___________________________________________
 
 		if(ser.inWaiting() > 0):

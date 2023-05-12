@@ -376,7 +376,7 @@ int broadcaster_multiple(void)
 		// if(buf->len > 30){		
 			ring_buf_put(&uart_rx_ringbuf, buf, buf->len);
 			uart_rx_fill += buf->len;
-			// printk("buf len %d uav_pathhistory_len %d %d %d %d \n", buf->len, buf->data[0], buf->data[1], buf->data[2], buf->data[3]);
+			printk("buf len %d uav_pathhistory_len %d %d %d %d \n", buf->len, buf->data[0], buf->data[1], buf->data[2], buf->data[3]);
 		// }
 		k_free(buf);
 	}
@@ -387,7 +387,7 @@ int broadcaster_multiple(void)
 	ring_buf_get(&uart_rx_ringbuf, &pdu_message_id, sizeof(pdu_message_id));
 	uart_rx_fill -= 4;
 
-	// printk("UART data %d %d %d \n", pdu_proto_version, pdu_message_id, uart_rx_fill);
+	printk("UART data %d %d %d \n", pdu_proto_version, pdu_message_id, uart_rx_fill);
 	if(uart_flag_2 == (255-uart_flag) && pdu_proto_version == 1 && pdu_message_id == 2){ 	// Parse protocol version = 1 and message ID = 2(CAM)
 		uint8_t buf[RECEIVED_DATA_SIZE];
 		ring_buf_get(&uart_rx_ringbuf, buf, sizeof(buf));

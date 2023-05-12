@@ -81,12 +81,12 @@ def main(args=None):
 
 		string += struct.pack('!H',hf_heading_val) 							# 30
 		string += struct.pack('!B',hf_heading_conf) 						# 31
+		string += struct.pack('!H',hf_vertical_heading) 					# 33
+		string += struct.pack('!H',hf_speed_val) 							# 35
 
 		string += struct.pack('c',b'\r')
 		result 				= ser.write(string)
 
-		string += struct.pack('!H',hf_vertical_heading)
-		string += struct.pack('!H',hf_speed_val)
 		string += struct.pack('!B',hf_speed_conf)
 		string += struct.pack('!H',hf_drive_dir_heading_val)
 		string += struct.pack('!B',hf_drive_dir_heading_conf)

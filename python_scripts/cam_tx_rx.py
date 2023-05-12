@@ -255,14 +255,14 @@ def main(args=None):
 							r_uav_safetyarearadius,
 							r_uav_pathhistory_len
 						))
-				time.sleep(0.01)
+				time.sleep(0.05)
 				# print(ser.read(BLE_ARRAY_MAX - OFFSET))
 			else:
 				print(ser.readline())
-				time.sleep(0.01)
+				time.sleep(0.05)
 		else:
 			# print('No data bc_ref_pos_longitude %d', bc_ref_pos_longitude)
-			time.sleep(0.01)
+			time.sleep(0.05)
 			continue
 
 	ser.close()

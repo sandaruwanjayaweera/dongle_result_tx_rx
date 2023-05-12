@@ -80,7 +80,7 @@ def main(args=None):
 
 		string += struct.pack('c',b'\r')
 		result 				= ser.write(string)
-		time.sleep(0.01)
+		time.sleep(0.03)
 
 		string 				= b''
 		string += struct.pack('!H',hf_heading_val) 							# 30
@@ -103,7 +103,7 @@ def main(args=None):
 
 		string += struct.pack('c',b'\r')
 		result 				= ser.write(string)
-		time.sleep(0.01)
+		time.sleep(0.03)
 
 		string 				= b''
 		string += struct.pack('!H',hf_yaw_r_val)
@@ -121,7 +121,7 @@ def main(args=None):
 		bc_ref_pos_lattitude 	+= 1
 		# print(string)
 		# print(result)
-		time.sleep(0.01)
+		time.sleep(0.03)
 #_____________________________________(Rx)___________________________________________
 
 		if(ser.inWaiting() > 0):
@@ -245,14 +245,14 @@ def main(args=None):
 							r_uav_safetyarearadius,
 							r_uav_pathhistory_len
 						))
-				time.sleep(0.05)
+				time.sleep(0.01)
 				# print(ser.read(BLE_ARRAY_MAX - OFFSET))
 			else:
 				print(ser.readline())
-				time.sleep(0.05)
+				time.sleep(0.01)
 		else:
 			# print('No data bc_ref_pos_longitude %d', bc_ref_pos_longitude)
-			time.sleep(0.05)
+			time.sleep(0.01)
 			continue
 
 	ser.close()

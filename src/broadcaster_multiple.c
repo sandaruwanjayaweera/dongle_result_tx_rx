@@ -371,56 +371,56 @@ int broadcaster_multiple(void)
 	for (;;) {
 //_________________________________________________(Tx)_________________________________________________________________
 
-	while(uart_rx_fill < RECEIVED_DATA_SIZE){
-		struct uart_data_t *buf = k_fifo_get(&fifo_uart_rx_data, K_FOREVER);
-		// if(buf->len > 30){		
-			ring_buf_put(&uart_rx_ringbuf, buf, buf->len);
-			uart_rx_fill += buf->len;
-			printk("buf len %d buf data %d %d %d %d \n", buf->len, buf->data[0], buf->data[1], buf->data[2], buf->data[3]);
-		// }
-		k_free(buf);
-	}
-
-	ring_buf_get(&uart_rx_ringbuf, &uart_flag, sizeof(uart_flag));
-	ring_buf_get(&uart_rx_ringbuf, &uart_flag_2, sizeof(uart_flag_2));
-	ring_buf_get(&uart_rx_ringbuf, &pdu_proto_version, sizeof(pdu_proto_version));
-	ring_buf_get(&uart_rx_ringbuf, &pdu_message_id, sizeof(pdu_message_id));
-	uart_rx_fill -= 4;
-
-	printk("UART data %d %d %d \n", pdu_proto_version, pdu_message_id, uart_rx_fill);
-	if(uart_flag_2 == (255-uart_flag) && pdu_proto_version == 1 && pdu_message_id == 2){ 	// Parse protocol version = 1 and message ID = 2(CAM)
-		uint8_t buf[RECEIVED_DATA_SIZE];
-		ring_buf_get(&uart_rx_ringbuf, buf, sizeof(buf));
-		bc_ref_pos_lattitude.bit_8[3] 					= buf[5];
-		bc_ref_pos_lattitude.bit_8[2] 					= buf[6];
-		bc_ref_pos_lattitude.bit_8[1] 					= buf[7];
-		bc_ref_pos_lattitude.bit_8[0]					= buf[8];
-		printk("filtered data %u %d uav_pathhistory_len %d %d %d %d \n", bc_ref_pos_lattitude.bit_32, uart_rx_fill, buf[RECEIVED_DATA_SIZE - 5], buf[RECEIVED_DATA_SIZE - 4], buf[RECEIVED_DATA_SIZE - 3], buf[RECEIVED_DATA_SIZE - 2]);
-		uart_rx_fill -= (RECEIVED_DATA_SIZE - 4);
-
-		for (size_t i = 0; i < (RECEIVED_DATA_SIZE - 4); i++) {
-			mfg_data[i+2] = buf[i];
+		while(uart_rx_fill < RECEIVED_DATA_SIZE){
+			struct uart_data_t *buf = k_fifo_get(&fifo_uart_rx_data, K_FOREVER);
+			uart_flag 	= buf->data[0];
+			uart_flag_2 = buf->data[1];
+			if(uart_flag_2 == (255-uart_flag)){		
+				ring_buf_put(&uart_rx_ringbuf, buf->data[2], (buf->len-2));
+				uart_rx_fill += buf->len;
+				printk("buf len %d buf data %d %d %d %d \n", buf->len, buf->data[0], buf->data[1], buf->data[2], buf->data[3]);
+			}
+			k_free(buf);
 		}
 
-		err = bt_le_ext_adv_set_data(adv, ad, ARRAY_SIZE(ad), NULL, 0);
-		if (err) {
-			printk("Failed to set advertising data for set (err %d)\n", err);
-		}
+		// ring_buf_get(&uart_rx_ringbuf, &uart_flag, sizeof(uart_flag));
+		// ring_buf_get(&uart_rx_ringbuf, &uart_flag_2, sizeof(uart_flag_2));
+		ring_buf_get(&uart_rx_ringbuf, &pdu_proto_version, sizeof(pdu_proto_version));
+		ring_buf_get(&uart_rx_ringbuf, &pdu_message_id, sizeof(pdu_message_id));
+		uart_rx_fill -= 2;
 
-		err = bt_le_ext_adv_start(adv, BT_LE_EXT_ADV_START_DEFAULT);
-		if (err) {
-			printk("Failed to start extended advertising set (err %d)\n", err);
-		}
-		
-		k_sleep(K_MSEC(20)); 	// stable 100 ms
+		printk("UART data %d %d %d \n", pdu_proto_version, pdu_message_id, uart_rx_fill);
+		if(pdu_proto_version == 1 && pdu_message_id == 2){ 	// Parse protocol version = 1 and message ID = 2(CAM)
+			uint8_t buf[RECEIVED_DATA_SIZE];
+			ring_buf_get(&uart_rx_ringbuf, buf, sizeof(buf));
+			bc_ref_pos_lattitude.bit_8[3] 					= buf[5];
+			bc_ref_pos_lattitude.bit_8[2] 					= buf[6];
+			bc_ref_pos_lattitude.bit_8[1] 					= buf[7];
+			bc_ref_pos_lattitude.bit_8[0]					= buf[8];
+			printk("filtered data %u %d uav_pathhistory_len %d %d %d %d \n", bc_ref_pos_lattitude.bit_32, uart_rx_fill, buf[RECEIVED_DATA_SIZE - 5], buf[RECEIVED_DATA_SIZE - 4], buf[RECEIVED_DATA_SIZE - 3], buf[RECEIVED_DATA_SIZE - 2]);
+			uart_rx_fill -= RECEIVED_DATA_SIZE;
 
-		bt_le_ext_adv_stop(adv);
-		if (err) {
-			printk("Advertising failed to stop (err %d)\n", err);
+			for (size_t i = 0; i < RECEIVED_DATA_SIZE; i++) {
+				mfg_data[i+2] = buf[i];
+			}
+
+			err = bt_le_ext_adv_set_data(adv, ad, ARRAY_SIZE(ad), NULL, 0);
+			if (err) {
+				printk("Failed to set advertising data for set (err %d)\n", err);
+			}
+
+			err = bt_le_ext_adv_start(adv, BT_LE_EXT_ADV_START_DEFAULT);
+			if (err) {
+				printk("Failed to start extended advertising set (err %d)\n", err);
+			}
+			
+			k_sleep(K_MSEC(20)); 	// stable 100 ms
+
+			bt_le_ext_adv_stop(adv);
+			if (err) {
+				printk("Advertising failed to stop (err %d)\n", err);
+			}
 		}
-	} else {
-		continue;
-	}
 
 	}
 

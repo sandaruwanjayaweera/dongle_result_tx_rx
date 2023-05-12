@@ -76,13 +76,15 @@ def main(args=None):
 		string += struct.pack('!H',bc_ref_pos_conf_ellipse_semi_minor)
 		string += struct.pack('!H',bc_ref_pos_altitude_heading)
 		string += struct.pack('!I',bc_ref_pos_altitude_val)
-		string += struct.pack('!B',bc_ref_pos_altitude_conf) 				# 28
+		string += struct.pack('!B',bc_ref_pos_altitude_conf) 				# 28 	# 26
 
 		string += struct.pack('c',b'\r')
 		result 				= ser.write(string)
 		time.sleep(0.03)
 
 		string 				= b''
+		string += struct.pack('!B',uart_flag)
+		string += struct.pack('!B',uart_flag_2)
 		string += struct.pack('!H',hf_heading_val) 							# 30
 		string += struct.pack('!B',hf_heading_conf) 						# 31
 		string += struct.pack('!H',hf_vertical_heading) 					# 33
@@ -99,22 +101,24 @@ def main(args=None):
 		string += struct.pack('!B',hf_long_acc_conf)
 		string += struct.pack('!H',hf_curv_val)
 		string += struct.pack('!B',hf_curv_conf)
-		string += struct.pack('!B',hf_curv_cal_mod) 						# 55
+		string += struct.pack('!B',hf_curv_cal_mod) 						# 55 	# 53
 
 		string += struct.pack('c',b'\r')
 		result 				= ser.write(string)
 		time.sleep(0.03)
 
 		string 				= b''
+		string += struct.pack('!B',uart_flag)
+		string += struct.pack('!B',uart_flag_2)
 		string += struct.pack('!H',hf_yaw_r_val)
 		string += struct.pack('!B',hf_yaw_r_conf)
 		string += struct.pack('!H',hf_lat_acc_val)
 		string += struct.pack('!B',hf_lat_acc_conf)
 		string += struct.pack('!H',hf_vertical_acc_val)
-		string += struct.pack('!B',hf_vertical_acc_conf) 					# 64
+		string += struct.pack('!B',hf_vertical_acc_conf) 					# 64 	# 62
 
 		string += struct.pack('!H',uav_safetyarearadius)
-		string += struct.pack('!B',uav_pathhistory_len) 					# 67
+		string += struct.pack('!B',uav_pathhistory_len) 					# 67 	# 65
 
 		string += struct.pack('c',b'\r')
 		result 				= ser.write(string)

@@ -3,7 +3,7 @@
 /* UART payload buffer element size. */
 #define BLE_ARRAY_MAX 227
 #define UART_BUF_SIZE 600 //cannot use 2 powers for some reason
-#define RECEIVED_DATA_SIZE 67 		// the information which is valueable and which can be used
+#define RECEIVED_DATA_SIZE 65 		// the information which is valueable and which can be used
 
 #define NAME_LEN 30
 

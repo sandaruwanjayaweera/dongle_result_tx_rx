@@ -86,7 +86,8 @@ def main(args=None):
 
 		string += struct.pack('c',b'\r')
 		result 				= ser.write(string)
-
+		time.sleep(0.25)
+		
 		string 				= b''
 		string += struct.pack('!B',hf_speed_conf)
 		string += struct.pack('!H',hf_drive_dir_heading_val)
@@ -116,7 +117,7 @@ def main(args=None):
 		result 				= ser.write(string)
 		# print(result)
 		bc_ref_pos_lattitude 	+= 1
-		time.sleep(0.5)
+		time.sleep(0.25)
 #_____________________________________(Rx)___________________________________________
 
 		if(ser.inWaiting() > 0):

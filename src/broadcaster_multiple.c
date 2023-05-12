@@ -373,9 +373,12 @@ int broadcaster_multiple(void)
 
 	while(uart_rx_fill < RECEIVED_DATA_SIZE){
 		struct uart_data_t *buf = k_fifo_get(&fifo_uart_rx_data, K_FOREVER);
-		ring_buf_put(&uart_rx_ringbuf, buf, buf->len);
+		// if(buf->len > 30){		
+			ring_buf_put(&uart_rx_ringbuf, buf, buf->len);
+			uart_rx_fill += buf->len;
+			printk("buf len %d uav_pathhistory_len %d %d %d %d \n", buf->len, buf->data[0], buf->data[1], buf->data[2], buf->data[3]);
+		// }
 		k_free(buf);
-		uart_rx_fill += buf->len;
 	}
 
 	ring_buf_get(&uart_rx_ringbuf, &uart_flag, sizeof(uart_flag));
@@ -386,15 +389,15 @@ int broadcaster_multiple(void)
 
 	// printk("UART data %d %d %d \n", pdu_proto_version, pdu_message_id, uart_rx_fill);
 	if(uart_flag_2 == (255-uart_flag) && pdu_proto_version == 1 && pdu_message_id == 2){ 	// Parse protocol version = 1 and message ID = 2(CAM)
-		uint8_t buf[RECEIVED_DATA_SIZE - 4];
+		uint8_t buf[RECEIVED_DATA_SIZE];
 		ring_buf_get(&uart_rx_ringbuf, buf, sizeof(buf));
-		uart_rx_fill -= (RECEIVED_DATA_SIZE - 4);
-
 		bc_ref_pos_lattitude.bit_8[3] 					= buf[5];
 		bc_ref_pos_lattitude.bit_8[2] 					= buf[6];
 		bc_ref_pos_lattitude.bit_8[1] 					= buf[7];
 		bc_ref_pos_lattitude.bit_8[0]					= buf[8];
-		printk("UART data %u %d \n", bc_ref_pos_lattitude.bit_32, uart_rx_fill);
+		// printk("UART data %u %d uav_pathhistory_len %d %d %d %d \n", bc_ref_pos_lattitude.bit_32, uart_rx_fill, buf[RECEIVED_DATA_SIZE - 5], buf[RECEIVED_DATA_SIZE - 4], buf[RECEIVED_DATA_SIZE - 3], buf[RECEIVED_DATA_SIZE - 2]);
+		uart_rx_fill -= (RECEIVED_DATA_SIZE - 4);
+
 		for (size_t i = 0; i < (RECEIVED_DATA_SIZE - 4); i++) {
 			mfg_data[i+2] = buf[i];
 		}

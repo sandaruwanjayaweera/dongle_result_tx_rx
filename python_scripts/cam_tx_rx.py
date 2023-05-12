@@ -78,6 +78,9 @@ def main(args=None):
 		string += struct.pack('!I',bc_ref_pos_altitude_val)
 		string += struct.pack('!B',bc_ref_pos_altitude_conf) 				# 28
 
+		string += struct.pack('c',b'\r')
+		result 				= ser.write(string)
+
 		string += struct.pack('!H',hf_heading_val)
 		string += struct.pack('!B',hf_heading_conf)
 		string += struct.pack('!H',hf_vertical_heading)
@@ -105,9 +108,9 @@ def main(args=None):
 		string += struct.pack('!H',uav_safetyarearadius)
 		string += struct.pack('!B',uav_pathhistory_len) 					# 67
 
-		string += struct.pack('c',b'\r')
-		# print(string)
-		result 				= ser.write(string)
+		# string += struct.pack('c',b'\r')
+		# # print(string)
+		# result 				= ser.write(string)
 		# print(result)
 		bc_ref_pos_lattitude 	+= 1
 		time.sleep(0.5)

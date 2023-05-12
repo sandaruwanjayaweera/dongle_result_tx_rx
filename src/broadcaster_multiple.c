@@ -376,7 +376,7 @@ int broadcaster_multiple(void)
 			uart_flag 	= buf->data[0];
 			uart_flag_2 = buf->data[1];
 			if(uart_flag_2 == (255-uart_flag)){		
-				ring_buf_put(&uart_rx_ringbuf, buf->data[2], (buf->len-2));
+				ring_buf_put(&uart_rx_ringbuf, buf + 2, (buf->len-2));
 				uart_rx_fill += buf->len;
 				printk("buf len %d buf data %d %d %d %d \n", buf->len, buf->data[0], buf->data[1], buf->data[2], buf->data[3]);
 			}

@@ -105,7 +105,7 @@ def main(args=None):
 
 		string += struct.pack('c',b'\r')
 		result 				= ser.write(string)
-		time.sleep(0.03)
+		time.sleep(0.05)
 
 		string 				= b''
 		string += struct.pack('!B',uart_flag)

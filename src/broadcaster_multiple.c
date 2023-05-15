@@ -389,7 +389,7 @@ int broadcaster_multiple(void)
 		ring_buf_get(&uart_rx_ringbuf, &pdu_message_id, sizeof(pdu_message_id));
 		uart_rx_fill -= 2;
 
-		printk("UART data %d %d %d \n", pdu_proto_version, pdu_message_id, uart_rx_fill);
+		printk("UART pdu_proto_version %d %d %d \n", pdu_proto_version, pdu_message_id, uart_rx_fill);
 		if(pdu_proto_version == 1 && pdu_message_id == 2){ 	// Parse protocol version = 1 and message ID = 2(CAM)
 			uint8_t buf[RECEIVED_DATA_SIZE];
 			ring_buf_get(&uart_rx_ringbuf, buf, sizeof(buf));

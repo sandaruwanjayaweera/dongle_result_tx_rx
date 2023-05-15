@@ -283,7 +283,7 @@ static void scan_recv(const struct bt_le_scan_recv_info *info,
 			bc_ref_pos_lattitude.bit_8[1] = buf->data[13];
 			bc_ref_pos_lattitude.bit_8[0] = buf->data[14];
 			
-			printk("bc_ref_pos_lattitude %d", bc_ref_pos_lattitude.bit_32);
+			printk("__buf___ %d %d %d %d %d %d %d %d ___\n", buf->data[7], buf->data[8], buf->data[9], buf->data[10], buf->data[11], buf->data[12], buf->data[13], buf->data[14]);
 		}
 		
 	}

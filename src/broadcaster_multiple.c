@@ -274,12 +274,16 @@ static void scan_recv(const struct bt_le_scan_recv_info *info,
 
 	if(info->addr->a.val[5] == 242 && info->addr->a.val[4] == 69 && info->addr->a.val[3] == 194 && info->addr->a.val[2] == 29 && info->addr->a.val[1] == 179 && info->addr->a.val[0] == 70){	
 		if(buf->data[4] == 1 && buf->data[5] == 2){
-			uint8_t data[BLE_ARRAY_MAX];
-			for (size_t i = 0; i < RECEIVED_DATA_SIZE; i++) {
-				data[i] = buf->data[i+4];
-			}
-			ble_data_received(data, RECEIVED_DATA_SIZE);
-			// printk("scan success");
+
+			pdu_proto_version 	= buf->data[4];
+			pdu_message_id 		= buf->data[5];
+			
+			bc_ref_pos_lattitude.bit_8[3] = buf->data[11];
+			bc_ref_pos_lattitude.bit_8[2] = buf->data[12];
+			bc_ref_pos_lattitude.bit_8[1] = buf->data[13];
+			bc_ref_pos_lattitude.bit_8[0] = buf->data[14];
+			
+			printk("bc_ref_pos_lattitude %d", bc_ref_pos_lattitude.bit_32);
 		}
 		
 	}
@@ -344,93 +348,10 @@ int broadcaster_multiple(void)
 		printk("Settings loaded (info %d)\n", err);
 	}
 
-	err = uart_init();
-	if (err) {
-		printk("Uart Init failed (err %d)\n", err);
-		return err;
-	}
-
 	err = bt_le_scan_start(&scan_param, device_found);
 	if (err) {
 		printk("Start scanning failed (err %d)\n", err);
 		return err;
-	}
-
-	/* Create a non-connectable non-scannable advertising set */
-	err = bt_le_ext_adv_create(&adv_param, NULL, &adv);
-	if (err) {
-		printk("Failed to create advertising set (err %d)\n", err);
-		return err;
-	}
-	// printk("Created advertising set.\n");
-
-	for (;;) {
-//_________________________________________________(Tx)_________________________________________________________________
-		struct uart_data_t *buf = k_fifo_get(&fifo_uart_rx_data, K_FOREVER);
-		if(buf){
-			// printk("UART data received.\n");
-			if(buf->data[0] == 1 && buf->data[1] == 2){ 	// Parse protocol version = 1 and message ID = 2(CAM)
-				// printk("corect data.\n");
-				if(RECEIVED_DATA_SIZE >=  buf->len){
-					for (size_t i = 0; i < buf->len; i++) {
-						mfg_data[i+2] = buf->data[i];
-					}
-				} else {
-					for (size_t i = 0; i < RECEIVED_DATA_SIZE; i++) {
-						mfg_data[i+2] = buf->data[i];
-					}				
-				}
-				k_free(buf);
-				err = bt_le_ext_adv_set_data(adv, ad, ARRAY_SIZE(ad), NULL, 0);
-				if (err) {
-					printk("Failed to set advertising data for set (err %d)\n", err);
-				}
-
-				err = bt_le_ext_adv_start(adv, BT_LE_EXT_ADV_START_DEFAULT);
-				if (err) {
-					printk("Failed to start extended advertising set (err %d)\n", err);
-				}
-				
-				k_sleep(K_MSEC(20)); 	// stable 100 ms
-
-				bt_le_ext_adv_stop(adv);
-				if (err) {
-					printk("Advertising failed to stop (err %d)\n", err);
-				}
-			} else {
-				k_free(buf);
-				// printk("bad data.\n");
-				err = bt_le_ext_adv_set_data(adv, ad, ARRAY_SIZE(ad), NULL, 0);
-				if (err) {
-					printk("Failed to set advertising data for set (err %d)\n", err);
-					return err;
-				}
-
-				err = bt_le_ext_adv_start(adv, BT_LE_EXT_ADV_START_DEFAULT);
-				if (err) {
-					printk("Failed to start extended advertising set (err %d)\n", err);
-					return err;
-				}
-				k_sleep(K_MSEC(20)); 	// stable 100 ms
-				bt_le_ext_adv_stop(adv);
-				if (err) {
-					printk("Advertising failed to stop (err %d)\n", err);
-					return err;
-				}
-			}
-		} else{
-			// printk("No data.\n");
-		}
-//_________________________________________________(Rx)_________________________________________________________________
-		// err = bt_le_scan_start(&scan_param, device_found);
-		// if (err) {
-		// 	printk("Start scanning failed (err %d)\n", err);
-		// 	return err;
-		// }
-		// // printk("Started scanning...\n");
-		// k_sleep(K_MSEC(10));
-		// err = bt_le_scan_stop();
-
 	}
 
 	return 0;

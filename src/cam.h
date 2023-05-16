@@ -23,10 +23,10 @@ typedef union bc_ref_pos_lattitude_t{
 	uint32_t bit_32;
 	uint8_t bit_8[4];
 } bc_ref_pos_lattitude;
-union bc_ref_pos_longitude_t{
+typedef union bc_ref_pos_longitude_t{
  uint32_t bit_32;
  uint8_t bit_8[4];
-} bc_ref_pos_longitude 							= { .bit_32 = 599 };
+} bc_ref_pos_longitude;
 union bc_ref_pos_conf_ellipse_semi_major_t{
  uint16_t bit_16;
  uint8_t bit_8[2];

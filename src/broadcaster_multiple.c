@@ -364,10 +364,15 @@ int broadcaster_multiple(void)
 		} else {
 			bc_ref_pos_longitude.bit_32 = 0;
 		}
-		mfg_data[9] = bc_ref_pos_longitude.bit_8[3];
-		mfg_data[10] = bc_ref_pos_longitude.bit_8[2];
-		mfg_data[11] = bc_ref_pos_longitude.bit_8[1];
-		mfg_data[12] = bc_ref_pos_longitude.bit_8[0];
+		mfg_data[9] = bc_ref_pos_lattitude.bit_8[3];
+		mfg_data[10] = bc_ref_pos_lattitude.bit_8[2];
+		mfg_data[11] = bc_ref_pos_lattitude.bit_8[1];
+		mfg_data[12] = bc_ref_pos_lattitude.bit_8[0];
+
+		mfg_data[13] = bc_ref_pos_longitude.bit_8[3];
+		mfg_data[14] = bc_ref_pos_longitude.bit_8[2];
+		mfg_data[15] = bc_ref_pos_longitude.bit_8[1];
+		mfg_data[16] = bc_ref_pos_longitude.bit_8[0];
 
 		err = bt_le_ext_adv_set_data(adv, ad, ARRAY_SIZE(ad), NULL, 0);
 		if (err) {

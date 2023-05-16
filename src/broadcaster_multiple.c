@@ -359,7 +359,7 @@ int broadcaster_multiple(void)
 
 		bc_ref_pos_lattitude.bit_32 += 1;
 
-		if(bc_ref_pos_lattitude.bit_32 > 3000){ 	// 1 min delay
+		if(bc_ref_pos_lattitude.bit_32 > 600){ 	// 1 min delay
 			bc_ref_pos_longitude.bit_32 += 1;
 		} else {
 			bc_ref_pos_longitude.bit_32 = 0;

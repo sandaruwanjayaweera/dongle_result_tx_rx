@@ -296,7 +296,7 @@ static void scan_recv(const struct bt_le_scan_recv_info *info,
 			if(cur_lattitude.bit_32 > 6000){
 				if(cur_longitude.bit_32 - prev_longitude.bit_32 > 1){
 					err_cnt += cur_longitude.bit_32 - prev_longitude.bit_32;
-					printk("err_cnt %d \n", err_cnt);
+					printk("err_cnt %d total %d \n", err_cnt, cur_longitude);
 				}
 			}
 

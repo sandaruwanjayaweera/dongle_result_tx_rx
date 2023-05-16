@@ -18,9 +18,6 @@ int err_cnt = 0;
 bc_ref_pos_lattitude cur_lattitude;
 bc_ref_pos_longitude cur_longitude;
 bc_ref_pos_longitude prev_longitude;
-bc_ref_pos_lattitude cur_lattitude;
-bc_ref_pos_longitude cur_longitude;
-bc_ref_pos_longitude prev_longitude;
 
 #define UART_WAIT_FOR_BUF_DELAY K_MSEC(50)		// default 50 ms
 #define UART_RX_TIMEOUT 50
@@ -286,15 +283,6 @@ static void scan_recv(const struct bt_le_scan_recv_info *info,
 			pdu_proto_version 	= buf->data[4];
 			pdu_message_id 		= buf->data[5];
 			
-			cur_lattitude.bit_8[3] = buf->data[11];
-			cur_lattitude.bit_8[2] = buf->data[12];
-			cur_lattitude.bit_8[1] = buf->data[13];
-			cur_lattitude.bit_8[0] = buf->data[14];
-
-			cur_longitude.bit_8[3] = buf->data[15];
-			cur_longitude.bit_8[2] = buf->data[16];
-			cur_longitude.bit_8[1] = buf->data[17];
-			cur_longitude.bit_8[0] = buf->data[18];
 			cur_lattitude.bit_8[3] = buf->data[11];
 			cur_lattitude.bit_8[2] = buf->data[12];
 			cur_lattitude.bit_8[1] = buf->data[13];

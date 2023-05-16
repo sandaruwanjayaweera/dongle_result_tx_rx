@@ -19,10 +19,10 @@ union 	pdu_src_station_id_t{
 } pdu_src_station_id 						= { .bit_32 = 100 };
 
 uint8_t 	bc_station_type 					= 0;
-union bc_ref_pos_lattitude_t{
+typedef union bc_ref_pos_lattitude_t{
 	uint32_t bit_32;
 	uint8_t bit_8[4];
-} bc_ref_pos_lattitude 							= { .bit_32 = 0xaabbccdd };
+} bc_ref_pos_lattitude;
 union bc_ref_pos_longitude_t{
  uint32_t bit_32;
  uint8_t bit_8[4];

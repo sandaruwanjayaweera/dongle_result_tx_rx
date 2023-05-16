@@ -14,6 +14,11 @@
 
 #include <zephyr/drivers/uart.h>
 
+int err_cnt = 0;
+bc_ref_pos_lattitude prev_lattitude;
+bc_ref_pos_lattitude current_lattitude;
+
+
 #define UART_WAIT_FOR_BUF_DELAY K_MSEC(50)		// default 50 ms
 #define UART_RX_TIMEOUT 50
 
@@ -278,12 +283,18 @@ static void scan_recv(const struct bt_le_scan_recv_info *info,
 			pdu_proto_version 	= buf->data[4];
 			pdu_message_id 		= buf->data[5];
 			
-			bc_ref_pos_lattitude.bit_8[3] = buf->data[11];
-			bc_ref_pos_lattitude.bit_8[2] = buf->data[12];
-			bc_ref_pos_lattitude.bit_8[1] = buf->data[13];
-			bc_ref_pos_lattitude.bit_8[0] = buf->data[14];
-			
-			printk("__buf___ %d %d %d %d %d %d %d %d ___\n", buf->data[7], buf->data[8], buf->data[9], buf->data[10], buf->data[11], buf->data[12], buf->data[13], buf->data[14]);
+			current_lattitude.bit_8[3] = buf->data[11];
+			current_lattitude.bit_8[2] = buf->data[12];
+			current_lattitude.bit_8[1] = buf->data[13];
+			current_lattitude.bit_8[0] = buf->data[14];
+
+			if(current_lattitude.bit_32 - prev_lattitude.bit_32 > 1){
+				err_cnt += current_lattitude.bit_32 - prev_lattitude.bit_32;
+				printk("err_cnt %d \n", err_cnt);
+			}
+
+			prev_lattitude.bit_32 = current_lattitude.bit_32;
+			// printk("__buf___ %u ___\n", bc_ref_pos_lattitude.bit_32);
 		}
 		
 	}
@@ -336,6 +347,8 @@ int broadcaster_multiple(void)
 		printk("Bluetooth init failed (err %d)\n", err);
 		return err;
 	}
+
+	err_cnt = 0;
 
 /* CONFIG_BT_EXT_ADV */
 	bt_le_scan_cb_register(&scan_callbacks);

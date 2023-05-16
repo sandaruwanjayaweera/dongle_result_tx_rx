@@ -293,7 +293,7 @@ static void scan_recv(const struct bt_le_scan_recv_info *info,
 			cur_longitude.bit_8[1] = buf->data[17];
 			cur_longitude.bit_8[0] = buf->data[18];
 
-			if(cur_lattitude.bit_32 > 3000){
+			if(cur_lattitude.bit_32 > 600){
 				if(cur_longitude.bit_32 - prev_longitude.bit_32 > 1){
 					err_cnt += cur_longitude.bit_32 - prev_longitude.bit_32;
 				}

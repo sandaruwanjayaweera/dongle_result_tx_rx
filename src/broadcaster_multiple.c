@@ -384,7 +384,7 @@ int broadcaster_multiple(void)
 			printk("Failed to start extended advertising set (err %d)\n", err);
 		}
 		
-		k_sleep(K_MSEC(20)); 	// stable 100 ms
+		k_sleep(K_MSEC(90)); 	// stable 100 ms
 
 		bt_le_ext_adv_stop(adv);
 		if (err) {

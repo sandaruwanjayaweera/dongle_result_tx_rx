@@ -410,6 +410,13 @@ int broadcaster_multiple(void)
 		printk("Settings loaded (info %d)\n", err);
 	}
 
+	/* Create a non-connectable non-scannable advertising set */
+	err = bt_le_ext_adv_create(&adv_param, NULL, &adv);
+	if (err) {
+		printk("Failed to create advertising set (err %d)\n", err);
+		return err;
+	}
+
 	err = bt_le_scan_start(&scan_param, device_found);
 	if (err) {
 		printk("Start scanning failed (err %d)\n", err);

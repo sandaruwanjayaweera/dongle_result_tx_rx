@@ -309,6 +309,8 @@ static void scan_recv(const struct bt_le_scan_recv_info *info,
 					return err;
 				}
 
+				mfg_data[7] = pdu_proto_version; 		// proto_version
+				mfg_data[7] = pdu_message_id; 			// message ID
 				mfg_data[7] = 0xff; 		// station ID
 
 				mfg_data[13] = cur_longitude.bit_8[3]; 	// longitude

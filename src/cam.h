@@ -11,7 +11,7 @@
 #define STATE_SCAN 1
 #define STATE_BROADCAST 2
 
-uint8_t 	pdu_proto_version 				= 4;
+uint8_t 	pdu_proto_version 				= 1;
 uint8_t  	pdu_message_id 					= 2;
 union 	pdu_src_station_id_t{
 	uint32_t bit_32;

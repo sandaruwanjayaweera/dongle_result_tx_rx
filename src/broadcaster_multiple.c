@@ -278,7 +278,7 @@ static void scan_recv(const struct bt_le_scan_recv_info *info,
 	bt_addr_le_to_str(info->addr, le_addr, sizeof(le_addr));
 
 	if(info->addr->a.val[5] == 242 && info->addr->a.val[4] == 69 && info->addr->a.val[3] == 194 && info->addr->a.val[2] == 29 && info->addr->a.val[1] == 179 && info->addr->a.val[0] == 70){	
-		if(buf->data[4] == 1 && buf->data[5] == 2){
+		if(buf->data[4] == 1 && buf->data[5] == 2 && buf->data[9] == 255){
 
 			pdu_proto_version 	= buf->data[4];
 			pdu_message_id 		= buf->data[5];
@@ -293,57 +293,10 @@ static void scan_recv(const struct bt_le_scan_recv_info *info,
 			cur_longitude.bit_8[1] = buf->data[17];
 			cur_longitude.bit_8[0] = buf->data[18];
 
-			if(cur_lattitude.bit_32 > 600){ 	// 10 Hz x 60s = 1 min
-				if(cur_longitude.bit_32 - prev_longitude.bit_32 > 1){
-					err_cnt += cur_longitude.bit_32 - prev_longitude.bit_32;
-				}
-			}
+			err_cnt = buf->data[228] + (buf->data[227]<<8) + (buf->data[226]<<16) + (buf->data[225]<<24);
 
+			printk("err_cnt %d total %d ---- lat %d \n", err_cnt, cur_longitude.bit_32, cur_lattitude.bit_32);
 
-			if(cur_longitude.bit_32 > 600){ 	// 1 min delay
-
-				int err;	
-				err = bt_le_scan_stop();
-				if (err) {
-					printk("Stopping scanning failed (err %d)\n", err);
-					return err;
-				}
-
-				mfg_data[7] = 0xff; 		// station ID
-
-				mfg_data[13] = cur_longitude.bit_8[3]; 	// longitude
-				mfg_data[14] = cur_longitude.bit_8[2];
-				mfg_data[15] = cur_longitude.bit_8[1];
-				mfg_data[16] = cur_longitude.bit_8[0];
-
-				mfg_data[224] = (uint8_t)(err_cnt >>  24); 	// error number
-				mfg_data[225] = (uint8_t)(err_cnt >>  16);
-				mfg_data[226] = (uint8_t)(err_cnt >>  8);
-				mfg_data[227] = (uint8_t)(err_cnt >>  0);
-
-				while(true){
-					err = bt_le_ext_adv_set_data(adv, ad, ARRAY_SIZE(ad), NULL, 0);
-					if (err) {
-						printk("Failed to set advertising data for set (err %d)\n", err);
-					}
-
-					err = bt_le_ext_adv_start(adv, BT_LE_EXT_ADV_START_DEFAULT);
-					if (err) {
-						printk("Failed to start extended advertising set (err %d)\n", err);
-					}
-
-					k_sleep(K_MSEC(90)); 	// stable 100 ms
-
-					bt_le_ext_adv_stop(adv);
-					if (err) {
-						printk("Advertising failed to stop (err %d)\n", err);
-					}
-				}
-			}
-
-			// printk("err_cnt %d total %d ---- lat %d \n", err_cnt, cur_longitude.bit_32, cur_lattitude.bit_32);
-			prev_longitude.bit_32 = cur_longitude.bit_32;
-			// printk("__buf___ %u ___\n", bc_ref_pos_lattitude.bit_32);
 		}
 		
 	}

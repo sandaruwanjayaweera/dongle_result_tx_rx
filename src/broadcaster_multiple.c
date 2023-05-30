@@ -15,9 +15,9 @@
 #include <zephyr/drivers/uart.h>
 
 uint32_t err_cnt = 0;
-bc_ref_pos_lattitude cur_lattitude;
-bc_ref_pos_longitude cur_longitude;
-bc_ref_pos_longitude prev_longitude;
+bc_ref_pos_lattitude cur_lattitude 		= { .bit_32 = 0 };
+bc_ref_pos_longitude cur_longitude  	= { .bit_32 = 0 };
+bc_ref_pos_longitude prev_longitude 	= { .bit_32 = 0 };
 
 #define UART_WAIT_FOR_BUF_DELAY K_MSEC(50)		// default 50 ms
 #define UART_RX_TIMEOUT 50

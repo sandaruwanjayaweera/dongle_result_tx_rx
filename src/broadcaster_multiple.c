@@ -321,15 +321,15 @@ static void scan_recv(const struct bt_le_scan_recv_info *info,
 				mfg_data[15] = cur_longitude.bit_8[1];
 				mfg_data[16] = cur_longitude.bit_8[0];
 
-				mfg_data[224] = (uint8_t)(err_cnt >>  24); 	// error number
-				mfg_data[225] = (uint8_t)(err_cnt >>  16);
-				mfg_data[226] = (uint8_t)(err_cnt >>  8);
-				mfg_data[227] = (uint8_t)(err_cnt >>  0);
+				mfg_data[223] = (uint8_t)(err_cnt >>  24); 	// error number
+				mfg_data[224] = (uint8_t)(err_cnt >>  16);
+				mfg_data[225] = (uint8_t)(err_cnt >>  8);
+				mfg_data[226] = (uint8_t)(err_cnt >>  0);
 
-				mfg_data[220] = (uint8_t)(avg_rssi >>  24); 	// rssi number
-				mfg_data[221] = (uint8_t)(avg_rssi >>  16);
-				mfg_data[222] = (uint8_t)(avg_rssi >>  8);
-				mfg_data[223] = (uint8_t)(avg_rssi >>  0);				
+				mfg_data[219] = (uint8_t)(avg_rssi >>  24); 	// rssi number
+				mfg_data[220] = (uint8_t)(avg_rssi >>  16);
+				mfg_data[221] = (uint8_t)(avg_rssi >>  8);
+				mfg_data[222] = (uint8_t)(avg_rssi >>  0);				
 
 				while(true){
 					err = bt_le_ext_adv_set_data(adv, ad, ARRAY_SIZE(ad), NULL, 0);

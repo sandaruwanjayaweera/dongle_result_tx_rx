@@ -326,7 +326,7 @@ static void scan_recv(const struct bt_le_scan_recv_info *info,
 				mfg_data[226] = (uint8_t)(err_cnt >>  8);
 				mfg_data[227] = (uint8_t)(err_cnt >>  0);
 
-				mfg_data[220] = (uint8_t)(avg_rssi >>  24); 	// error number
+				mfg_data[220] = (uint8_t)(avg_rssi >>  24); 	// rssi number
 				mfg_data[221] = (uint8_t)(avg_rssi >>  16);
 				mfg_data[222] = (uint8_t)(avg_rssi >>  8);
 				mfg_data[223] = (uint8_t)(avg_rssi >>  0);				

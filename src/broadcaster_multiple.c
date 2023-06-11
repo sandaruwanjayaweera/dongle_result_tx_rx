@@ -18,6 +18,7 @@ uint32_t err_cnt = 0;
 bc_ref_pos_lattitude cur_lattitude;
 bc_ref_pos_longitude cur_longitude;
 bc_ref_pos_longitude prev_longitude;
+uint32_t avg_rssi = 0;
 
 #define UART_WAIT_FOR_BUF_DELAY K_MSEC(50)		// default 50 ms
 #define UART_RX_TIMEOUT 50
@@ -293,9 +294,10 @@ static void scan_recv(const struct bt_le_scan_recv_info *info,
 			cur_longitude.bit_8[1] = buf->data[17];
 			cur_longitude.bit_8[0] = buf->data[18];
 
-			err_cnt = buf->data[228] + (buf->data[227]<<8) + (buf->data[226]<<16) + (buf->data[225]<<24);
+			err_cnt 	= buf->data[228] + (buf->data[227]<<8) + (buf->data[226]<<16) + (buf->data[225]<<24);
+			avg_rssi 	= (buf->data[224] + (buf->data[223]<<8) + (buf->data[222]<<16) + (buf->data[221]<<24)) / (6000 - err_cnt);
 
-			printk("err_cnt %d total %d ---- lat %d \n", err_cnt, cur_longitude.bit_32, cur_lattitude.bit_32);
+			printk("err_cnt %d total %d lat %d RSSI %d \n", err_cnt, cur_longitude.bit_32, cur_lattitude.bit_32, avg_rssi);
 
 		}
 		

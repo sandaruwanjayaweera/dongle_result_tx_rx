@@ -20,7 +20,7 @@ bc_ref_pos_longitude cur_longitude  	= { .bit_32 = 0 };
 bc_ref_pos_longitude prev_longitude 	= { .bit_32 = 0 };
 
 int32_t tot_rssi = 0;
-int8_t 	avg_rssi = 0;
+uint8_t 	avg_rssi = 0;
 
 #define UART_WAIT_FOR_BUF_DELAY K_MSEC(50)		// default 50 ms
 #define UART_RX_TIMEOUT 50
@@ -327,11 +327,17 @@ static void scan_recv(const struct bt_le_scan_recv_info *info,
 				mfg_data[225] = (uint8_t)(err_cnt >>  8);
 				mfg_data[226] = (uint8_t)(err_cnt >>  0);
 
-				avg_rssi = tot_rssi / (6000 - err_cnt);
+				if(tot_rssi < 0){
+					avg_rssi = (-tot_rssi) / (6000 - err_cnt);
+					mfg_data[221] = 1;
+				} else {
+					avg_rssi = tot_rssi / (6000 - err_cnt);
+					mfg_data[221] = 0;
+				}
 
-				mfg_data[219] = (uint8_t)(avg_rssi >>  24); 	// rssi number
-				mfg_data[220] = (uint8_t)(avg_rssi >>  16);
-				mfg_data[221] = (uint8_t)(avg_rssi >>  8);
+				mfg_data[219] = 0; 	// rssi number
+				mfg_data[220] = 0;
+				// mfg_data[221] = (uint8_t)(avg_rssi >>  8);
 				mfg_data[222] = (uint8_t)(avg_rssi >>  0);				
 
 				while(true){

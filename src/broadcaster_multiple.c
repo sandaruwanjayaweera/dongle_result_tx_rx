@@ -295,7 +295,7 @@ static void scan_recv(const struct bt_le_scan_recv_info *info,
 			cur_longitude.bit_8[0] = buf->data[18];
 
 			err_cnt 	= buf->data[228] + (buf->data[227]<<8) + (buf->data[226]<<16) + (buf->data[225]<<24);
-			avg_rssi 	= (buf->data[224] + (buf->data[223]<<8) + (buf->data[222]<<16) + (buf->data[221]<<24)) / (6000 - err_cnt);
+			avg_rssi 	= buf->data[224] + (buf->data[223]<<8) + (buf->data[222]<<16) + (buf->data[221]<<24);
 
 			printk("err_cnt %u total %u lat %u RSSI %u \n", err_cnt, cur_longitude.bit_32, cur_lattitude.bit_32, avg_rssi);
 

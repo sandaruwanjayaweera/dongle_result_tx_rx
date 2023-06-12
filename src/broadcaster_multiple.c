@@ -19,7 +19,8 @@ bc_ref_pos_lattitude cur_lattitude 		= { .bit_32 = 0 };
 bc_ref_pos_longitude cur_longitude  	= { .bit_32 = 0 };
 bc_ref_pos_longitude prev_longitude 	= { .bit_32 = 0 };
 
-uint32_t avg_rssi = 0;
+int32_t tot_rssi = 0;
+int8_t 	avg_rssi = 0;
 
 #define UART_WAIT_FOR_BUF_DELAY K_MSEC(50)		// default 50 ms
 #define UART_RX_TIMEOUT 50
@@ -299,7 +300,7 @@ static void scan_recv(const struct bt_le_scan_recv_info *info,
 				if(cur_longitude.bit_32 - prev_longitude.bit_32 > 1){
 					err_cnt += cur_longitude.bit_32 - prev_longitude.bit_32;
 				}
-				avg_rssi += info->rssi;
+				tot_rssi += info->rssi;
 			}
 
 
@@ -325,6 +326,8 @@ static void scan_recv(const struct bt_le_scan_recv_info *info,
 				mfg_data[224] = (uint8_t)(err_cnt >>  16);
 				mfg_data[225] = (uint8_t)(err_cnt >>  8);
 				mfg_data[226] = (uint8_t)(err_cnt >>  0);
+
+				avg_rssi = tot_rssi / (6000 - err_cnt);
 
 				mfg_data[219] = (uint8_t)(avg_rssi >>  24); 	// rssi number
 				mfg_data[220] = (uint8_t)(avg_rssi >>  16);
@@ -354,6 +357,7 @@ static void scan_recv(const struct bt_le_scan_recv_info *info,
 			// printk("err_cnt %d total %d ---- lat %d \n", err_cnt, cur_longitude.bit_32, cur_lattitude.bit_32);
 			prev_longitude.bit_32 = cur_longitude.bit_32;
 			// printk("__buf___ %u ___\n", bc_ref_pos_lattitude.bit_32);
+			// printk("RSSI %d ___\n", info->rssi);
 		}
 		
 	}

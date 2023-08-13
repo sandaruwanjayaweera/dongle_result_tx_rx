@@ -306,7 +306,7 @@ static void scan_recv(const struct bt_le_scan_recv_info *info,
 			}
 
 
-			if(cur_longitude.bit_32 > 6000){ 	// 10 min delay
+			if(cur_longitude.bit_32 > 600){ 	// 1 min delay
 
 				int err;	
 				err = bt_le_scan_stop();

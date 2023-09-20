@@ -18,7 +18,7 @@ def main(args=None):
 
 		pdu_proto_version 	= 1
 		pdu_message_id 		= 2
-		pdu_src_station_id 	= 1
+		pdu_src_station_id 	= 2
 
 		bc_station_type 					= 4
 		# bc_ref_pos_lattitude 				= 5

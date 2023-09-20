@@ -398,10 +398,12 @@ int broadcaster_multiple(void)
 {
 	struct bt_le_scan_param scan_param = {
 		.type       = BT_LE_SCAN_TYPE_PASSIVE,
-		.options    = (BT_LE_SCAN_OPT_FILTER_DUPLICATE | BT_LE_SCAN_OPT_CODED),
+		.options    = (BT_LE_SCAN_OPT_FILTER_DUPLICATE | BT_LE_SCAN_OPT_CODED | BT_LE_SCAN_OPT_NO_1M),
 		.interval   = 0x0030, //BT_GAP_SCAN_FAST_INTERVAL,
 		.window     = 0x0030, //BT_GAP_SCAN_FAST_WINDOW,
 		.timeout 	= 0x0000, //BT_GAP_PER_ADV_MAX_TIMEOUT, 								// How long the scanner will run before stopping automatically.
+		.interval_coded	= 0x0030,
+		.window_coded 	= 0x0030,
 	};
 	struct bt_le_adv_param adv_param = {
 		.id = BT_ID_DEFAULT,

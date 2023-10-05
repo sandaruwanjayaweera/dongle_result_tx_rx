@@ -366,21 +366,21 @@ int broadcaster_multiple(void)
 
 	for (;;) {
 //_________________________________________________(Tx)_________________________________________________________________
-		struct uart_data_t *buf = k_fifo_get(&fifo_uart_rx_data, K_FOREVER);
-		if(buf){
+		// struct uart_data_t *buf = k_fifo_get(&fifo_uart_rx_data, K_FOREVER);
+		// if(buf){
 			// printk("UART data received.\n");
-			if(buf->data[0] == 1 && buf->data[1] == 2){ 	// Parse protocol version = 1 and message ID = 2(CAM)
-				printk("buflen %d\n", buf->len);
-				if(BLE_ARRAY_MAX >=  buf->len){
-					for (size_t i = 0; i < buf->len; i++) {
-						mfg_data[i+2] = buf->data[i];
-					}
-				} else {
-					for (size_t i = 0; i < BLE_ARRAY_MAX; i++) {
-						mfg_data[i+2] = buf->data[i];
-					}				
-				}
-				k_free(buf);
+			// if(buf->data[0] == 1 && buf->data[1] == 2){ 	// Parse protocol version = 1 and message ID = 2(CAM)
+			// 	printk("buflen %d\n", buf->len);
+			// 	if(BLE_ARRAY_MAX >=  buf->len){
+			// 		for (size_t i = 0; i < buf->len; i++) {
+			// 			mfg_data[i+2] = buf->data[i];
+			// 		}
+			// 	} else {
+			// 		for (size_t i = 0; i < BLE_ARRAY_MAX; i++) {
+			// 			mfg_data[i+2] = buf->data[i];
+			// 		}				
+			// 	}
+				// k_free(buf);
 				err = bt_le_ext_adv_set_data(adv, ad, ARRAY_SIZE(ad), NULL, 0);
 				if (err) {
 					printk("Failed to set advertising data for set (err %d)\n", err);
@@ -397,30 +397,30 @@ int broadcaster_multiple(void)
 				if (err) {
 					printk("Advertising failed to stop (err %d)\n", err);
 				}
-			} else {
-				k_free(buf);
-				// printk("bad data.\n");
-				err = bt_le_ext_adv_set_data(adv, ad, ARRAY_SIZE(ad), NULL, 0);
-				if (err) {
-					printk("Failed to set advertising data for set (err %d)\n", err);
-					return err;
-				}
+			// } else {
+			// 	k_free(buf);
+			// 	// printk("bad data.\n");
+			// 	err = bt_le_ext_adv_set_data(adv, ad, ARRAY_SIZE(ad), NULL, 0);
+			// 	if (err) {
+			// 		printk("Failed to set advertising data for set (err %d)\n", err);
+			// 		return err;
+			// 	}
 
-				err = bt_le_ext_adv_start(adv, BT_LE_EXT_ADV_START_DEFAULT);
-				if (err) {
-					printk("Failed to start extended advertising set (err %d)\n", err);
-					return err;
-				}
-				k_sleep(K_MSEC(20)); 	// stable 100 ms
-				bt_le_ext_adv_stop(adv);
-				if (err) {
-					printk("Advertising failed to stop (err %d)\n", err);
-					return err;
-				}
-			}
-		} else{
-			// printk("No data.\n");
-		}
+			// 	err = bt_le_ext_adv_start(adv, BT_LE_EXT_ADV_START_DEFAULT);
+			// 	if (err) {
+			// 		printk("Failed to start extended advertising set (err %d)\n", err);
+			// 		return err;
+			// 	}
+			// 	k_sleep(K_MSEC(20)); 	// stable 100 ms
+			// 	bt_le_ext_adv_stop(adv);
+			// 	if (err) {
+			// 		printk("Advertising failed to stop (err %d)\n", err);
+			// 		return err;
+			// 	}
+			// }
+		// } else{
+		// 	// printk("No data.\n");
+		// }
 //_________________________________________________(Rx)_________________________________________________________________
 		// err = bt_le_scan_start(&scan_param, device_found);
 		// if (err) {

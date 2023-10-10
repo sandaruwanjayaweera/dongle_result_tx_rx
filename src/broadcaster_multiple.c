@@ -400,23 +400,23 @@ int broadcaster_multiple(void)
 			} else {
 				k_free(buf);
 				// printk("bad data.\n");
-				err = bt_le_ext_adv_set_data(adv, ad, ARRAY_SIZE(ad), NULL, 0);
-				if (err) {
-					printk("Failed to set advertising data for set (err %d)\n", err);
-					return err;
-				}
+				// err = bt_le_ext_adv_set_data(adv, ad, ARRAY_SIZE(ad), NULL, 0);
+				// if (err) {
+				// 	printk("Failed to set advertising data for set (err %d)\n", err);
+				// 	return err;
+				// }
 
-				err = bt_le_ext_adv_start(adv, BT_LE_EXT_ADV_START_DEFAULT);
-				if (err) {
-					printk("Failed to start extended advertising set (err %d)\n", err);
-					return err;
-				}
-				k_sleep(K_MSEC(20)); 	// stable 100 ms
-				bt_le_ext_adv_stop(adv);
-				if (err) {
-					printk("Advertising failed to stop (err %d)\n", err);
-					return err;
-				}
+				// err = bt_le_ext_adv_start(adv, BT_LE_EXT_ADV_START_DEFAULT);
+				// if (err) {
+				// 	printk("Failed to start extended advertising set (err %d)\n", err);
+				// 	return err;
+				// }
+				// k_sleep(K_MSEC(20)); 	// stable 100 ms
+				// bt_le_ext_adv_stop(adv);
+				// if (err) {
+				// 	printk("Advertising failed to stop (err %d)\n", err);
+				// 	return err;
+				// }
 			}
 		} else{
 			// printk("No data.\n");

@@ -366,61 +366,73 @@ int broadcaster_multiple(void)
 
 	for (;;) {
 //_________________________________________________(Tx)_________________________________________________________________
-		// struct uart_data_t *buf = k_fifo_get(&fifo_uart_rx_data, K_FOREVER);
-		// if(buf){
-			// printk("UART data received.\n");
-			// if(buf->data[0] == 1 && buf->data[1] == 2){ 	// Parse protocol version = 1 and message ID = 2(CAM)
-			// 	printk("buflen %d\n", buf->len);
-			// 	if(BLE_ARRAY_MAX >=  buf->len){
-			// 		for (size_t i = 0; i < buf->len; i++) {
-			// 			mfg_data[i+2] = buf->data[i];
-			// 		}
-			// 	} else {
-			// 		for (size_t i = 0; i < BLE_ARRAY_MAX; i++) {
-			// 			mfg_data[i+2] = buf->data[i];
-			// 		}				
-			// 	}
-				// k_free(buf);
-				err = bt_le_ext_adv_set_data(adv, ad, ARRAY_SIZE(ad), NULL, 0);
-				if (err) {
-					printk("Failed to set advertising data for set (err %d)\n", err);
-				}
+		struct uart_data_t *buf = k_fifo_get(&fifo_uart_rx_data, K_FOREVER);
+		int offset = 0;
+		if(buf){
+			printk("UART data received. len %d\n", buf->len);
+			if(buf->len < (buf->data[3] + 7)){
+				printk("buflen %d data %d \n", buf->len, buf->data[0]);
 
-				err = bt_le_ext_adv_start(adv, BT_LE_EXT_ADV_START_DEFAULT);
-				if (err) {
-					printk("Failed to start extended advertising set (err %d)\n", err);
-				}
-				
-				k_sleep(K_MSEC(20)); 	// stable 100 ms
+				k_free(buf);
+			} else{
+				while(offset <= buf->len){
+					uint8_t uart_len = buf->data[offset + 3];
+					if(buf->data[offset] == 0xff && buf->data[offset + 1] == 0x00 && buf->data[offset + 2] == 0xff && buf->data[offset + uart_len + 4] == 0xff && buf->data[offset + uart_len + 5] == 0xff && buf->data[offset + uart_len + 6] == 0xff){ 	// Parse protocol version = 1 and message ID = 2(CAM)
+						// printk("buflen %d\n", buf->len);
+						if(BLE_ARRAY_MAX >=  buf->data[offset + 3]){
+							for (size_t i = 0; i < buf->data[offset + 3]; i++) {
+								mfg_data[i+2] = buf->data[offset + i + 4];
+							}
+						} else {
+							for (size_t i = 0; i < BLE_ARRAY_MAX; i++) {
+								mfg_data[i+2] = buf->data[offset + i + 4];
+							}				
+						}
+						k_free(buf);
+						err = bt_le_ext_adv_set_data(adv, ad, ARRAY_SIZE(ad), NULL, 0);
+						if (err) {
+							printk("Failed to set advertising data for set (err %d)\n", err);
+						}
 
-				bt_le_ext_adv_stop(adv);
-				if (err) {
-					printk("Advertising failed to stop (err %d)\n", err);
-				}
-			// } else {
-			// 	k_free(buf);
-			// 	// printk("bad data.\n");
-			// 	err = bt_le_ext_adv_set_data(adv, ad, ARRAY_SIZE(ad), NULL, 0);
-			// 	if (err) {
-			// 		printk("Failed to set advertising data for set (err %d)\n", err);
-			// 		return err;
-			// 	}
+						err = bt_le_ext_adv_start(adv, BT_LE_EXT_ADV_START_DEFAULT);
+						if (err) {
+							printk("Failed to start extended advertising set (err %d)\n", err);
+						}
+						
+						k_sleep(K_MSEC(20)); 	// stable 100 ms
 
-			// 	err = bt_le_ext_adv_start(adv, BT_LE_EXT_ADV_START_DEFAULT);
-			// 	if (err) {
-			// 		printk("Failed to start extended advertising set (err %d)\n", err);
-			// 		return err;
-			// 	}
-			// 	k_sleep(K_MSEC(20)); 	// stable 100 ms
-			// 	bt_le_ext_adv_stop(adv);
-			// 	if (err) {
-			// 		printk("Advertising failed to stop (err %d)\n", err);
-			// 		return err;
-			// 	}
-			// }
-		// } else{
-		// 	// printk("No data.\n");
-		// }
+						bt_le_ext_adv_stop(adv);
+						if (err) {
+							printk("Advertising failed to stop (err %d)\n", err);
+						}
+						offset += (offset + uart_len + 7);
+					} else {
+						k_free(buf);
+						// printk("bad data.\n");
+						err = bt_le_ext_adv_set_data(adv, ad, ARRAY_SIZE(ad), NULL, 0);
+						if (err) {
+							printk("Failed to set advertising data for set (err %d)\n", err);
+							return err;
+						}
+
+						err = bt_le_ext_adv_start(adv, BT_LE_EXT_ADV_START_DEFAULT);
+						if (err) {
+							printk("Failed to start extended advertising set (err %d)\n", err);
+							return err;
+						}
+						k_sleep(K_MSEC(20)); 	// stable 100 ms
+						bt_le_ext_adv_stop(adv);
+						if (err) {
+							printk("Advertising failed to stop (err %d)\n", err);
+							return err;
+						}
+						offset += 3;
+					}
+
+				}
+			}
+			}
+
 //_________________________________________________(Rx)_________________________________________________________________
 		// err = bt_le_scan_start(&scan_param, device_found);
 		// if (err) {

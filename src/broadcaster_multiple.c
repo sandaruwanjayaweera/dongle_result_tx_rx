@@ -38,6 +38,49 @@ static const struct bt_data ad[] = {
 
 static struct bt_le_ext_adv *adv;
 
+uint8_t ble_data_received(uint8_t *data, uint16_t len)
+{
+	int err;
+
+	for (uint16_t pos = 0; pos != len;) {
+		struct uart_data_t *tx = k_malloc(sizeof(*tx));
+
+		if (!tx) {
+			// printk("Not able to allocate UART send data buffer");
+			return 1;
+		}
+
+		/* Keep the last byte of TX buffer for potential LF char. */
+		size_t tx_data_size = sizeof(tx->data) - 1;
+
+		if ((len - pos) > tx_data_size) {
+			tx->len = tx_data_size;
+		} else {
+			tx->len = (len - pos);
+		}
+
+		memcpy(tx->data, &data[pos], tx->len);
+
+		pos += tx->len;
+
+		/* Append the LF character when the CR character triggered
+		 * transmission from the peer.
+		 */
+		if ((pos == len) && (data[len - 1] == '\r')) {
+			tx->data[tx->len] = '\n';
+			tx->len++;
+		}
+
+		err = uart_tx(uart, tx->data, tx->len, SYS_FOREVER_MS);
+		if (err) {
+			k_fifo_put(&fifo_uart_tx_data, tx);
+		}
+	}
+
+	return 1;
+}
+
+
 static void uart_cb(const struct device *dev, struct uart_event *evt, void *user_data)
 {
 	ARG_UNUSED(dev);
@@ -203,6 +246,49 @@ static int uart_init(void)
 			      UART_RX_TIMEOUT);
 }
 
+static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
+			 struct net_buf_simple *ad)
+{
+	char addr_str[BT_ADDR_LE_STR_LEN];
+	// char scan_adr = "F2:45:C2:1D:B3:46";
+
+	bt_addr_le_to_str(addr, addr_str, sizeof(addr_str));
+}
+
+static void scan_recv(const struct bt_le_scan_recv_info *info,
+		      struct net_buf_simple *buf)
+{
+	char le_addr[BT_ADDR_LE_STR_LEN];
+	char name[NAME_LEN];
+	uint8_t data_status;
+	uint16_t data_len;
+
+	(void)memset(name, 0, sizeof(name));
+
+	data_len = buf->len;
+	// bt_data_parse(buf, data_cb, name);
+
+	data_status = BT_HCI_LE_ADV_EVT_TYPE_DATA_STATUS(info->adv_props);
+
+	bt_addr_le_to_str(info->addr, le_addr, sizeof(le_addr));
+
+	if(info->addr->a.val[5] == 242 && info->addr->a.val[4] == 69 && info->addr->a.val[3] == 194 && info->addr->a.val[2] == 29 && info->addr->a.val[1] == 179 && info->addr->a.val[0] == 70){	
+		if(buf->data[4] == 1 && buf->data[5] == 2){
+			uint8_t data[BLE_ARRAY_MAX];
+			for (size_t i = 0; i < RECEIVED_DATA_SIZE; i++) {
+				data[i] = buf->data[i+4];
+			}
+			ble_data_received(data, RECEIVED_DATA_SIZE);
+			// printk("scan success");
+		}
+		
+	}
+}
+
+static struct bt_le_scan_cb scan_callbacks = {
+	.recv = scan_recv,
+};
+
 void ble_set_mac(bt_addr_t* addr) {
 	struct net_buf *buf;
 	int err;
@@ -222,6 +308,15 @@ void ble_set_mac(bt_addr_t* addr) {
 
 int broadcaster_multiple(void)
 {
+
+	struct bt_le_scan_param scan_param = {
+		.type       = BT_LE_SCAN_TYPE_PASSIVE,
+		.options    = BT_LE_SCAN_OPT_FILTER_DUPLICATE,
+		.interval   = 0x0030, //BT_GAP_SCAN_FAST_INTERVAL,
+		.window     = 0x0030, //BT_GAP_SCAN_FAST_WINDOW,
+		.timeout 	= 0x0000, //BT_GAP_PER_ADV_MAX_TIMEOUT, 								// How long the scanner will run before stopping automatically.
+	};
+
 	struct bt_le_adv_param adv_param = {
 		.id = BT_ID_DEFAULT,
 		.sid = 0U, /* Supply unique SID when creating advertising set */
@@ -240,6 +335,11 @@ int broadcaster_multiple(void)
 		return err;
 	}
 
+/* CONFIG_BT_EXT_ADV */
+	bt_le_scan_cb_register(&scan_callbacks);
+	// printk("Registered scan callbacks\n");
+/* CONFIG_BT_EXT_ADV */
+
 	ble_set_mac(&mac);
 	if (IS_ENABLED(CONFIG_SETTINGS)) {
 		err = settings_load();
@@ -249,6 +349,12 @@ int broadcaster_multiple(void)
 	err = uart_init();
 	if (err) {
 		printk("Uart Init failed (err %d)\n", err);
+		return err;
+	}
+
+	err = bt_le_scan_start(&scan_param, device_found);
+	if (err) {
+		printk("Start scanning failed (err %d)\n", err);
 		return err;
 	}
 

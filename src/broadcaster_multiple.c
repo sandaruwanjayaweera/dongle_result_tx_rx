@@ -275,10 +275,10 @@ static void scan_recv(const struct bt_le_scan_recv_info *info,
 	if(info->addr->a.val[5] == 242 && info->addr->a.val[4] == 69 && info->addr->a.val[3] == 194 && info->addr->a.val[2] == 29 && info->addr->a.val[1] == 179 && info->addr->a.val[0] == 70){	
 		if(buf->data[4] == 1 && buf->data[5] == 2){
 			uint8_t data[BLE_ARRAY_MAX];
-			for (size_t i = 0; i < RECEIVED_DATA_SIZE; i++) {
+			for (size_t i = 0; i < CAM_DATA_SIZE; i++) {
 				data[i] = buf->data[i+4];
 			}
-			ble_data_received(data, RECEIVED_DATA_SIZE);
+			ble_data_received(data, CAM_DATA_SIZE);
 			// printk("scan success");
 		}
 		

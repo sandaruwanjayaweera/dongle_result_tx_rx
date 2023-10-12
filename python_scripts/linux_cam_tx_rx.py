@@ -9,6 +9,7 @@ def main(args=None):
 	OFFSET 				= 3
 	ser 				= serial.Serial('/dev/ttyTHS0', 115200)
 	bc_ref_pos_lattitude 	= 1
+	pkt_no 				= 0;
 
 	while True:
 #_____________________________________(Tx)___________________________________________
@@ -58,6 +59,12 @@ def main(args=None):
 
 		string 				= b''
 
+		string += struct.pack('!B',0xff)
+		string += struct.pack('!B',0x00)
+		string += struct.pack('!B',0xff)
+		string += struct.pack('!B',pkt_no)
+		string += struct.pack('!B',32)
+
 		string += struct.pack('!B',pdu_proto_version)
 		string += struct.pack('!B',pdu_message_id)
 		string += struct.pack('!I',pdu_src_station_id)
@@ -68,8 +75,23 @@ def main(args=None):
 		string += struct.pack('!H',bc_ref_pos_conf_ellipse_semi_minor)
 		string += struct.pack('!H',bc_ref_pos_altitude_heading)
 		string += struct.pack('!I',bc_ref_pos_altitude_val)
-		string += struct.pack('!B',bc_ref_pos_altitude_conf) 				# 26
 
+		string += struct.pack('!B',0xff)
+		string += struct.pack('!B',0xff)
+
+		string += struct.pack('c',b'\r')
+		result 				= ser.write(string)
+		time.sleep(0.03)
+
+		string 				= b''
+
+		string += struct.pack('!B',0xff)
+		string += struct.pack('!B',0x00)
+		string += struct.pack('!B',0xff)
+		string += struct.pack('!B',pkt_no)
+		string += struct.pack('!B',32)
+
+		string += struct.pack('!B',bc_ref_pos_altitude_conf)
 		string += struct.pack('!H',hf_heading_val)
 		string += struct.pack('!B',hf_heading_conf)
 		string += struct.pack('!H',hf_vertical_heading)
@@ -84,6 +106,23 @@ def main(args=None):
 		string += struct.pack('!H',hf_v_height)
 		string += struct.pack('!H',hf_long_acc_val)
 		string += struct.pack('!B',hf_long_acc_conf)
+		string += struct.pack('!B',0)
+
+		string += struct.pack('!B',0xff)
+		string += struct.pack('!B',0xff)
+
+		string += struct.pack('c',b'\r')
+		result 				= ser.write(string)
+		time.sleep(0.03)
+
+		string 				= b''
+
+		string += struct.pack('!B',0xff)
+		string += struct.pack('!B',0x00)
+		string += struct.pack('!B',0xff)
+		string += struct.pack('!B',pkt_no)
+		string += struct.pack('!B',32)
+
 		string += struct.pack('!H',hf_curv_val)
 		string += struct.pack('!B',hf_curv_conf)
 		string += struct.pack('!B',hf_curv_cal_mod)
@@ -92,17 +131,23 @@ def main(args=None):
 		string += struct.pack('!H',hf_lat_acc_val)
 		string += struct.pack('!B',hf_lat_acc_conf)
 		string += struct.pack('!H',hf_vertical_acc_val)
-		string += struct.pack('!B',hf_vertical_acc_conf) 					# 62
+		string += struct.pack('!B',hf_vertical_acc_conf)
 
 		string += struct.pack('!H',uav_safetyarearadius)
-		string += struct.pack('!B',uav_pathhistory_len) 					# 65
+		string += struct.pack('!B',uav_pathhistory_len)
+		string += struct.pack('!I',0)
+		string += struct.pack('!I',0)
+		string += struct.pack('!B',0)
+
+		string += struct.pack('!B',0xff)
+		string += struct.pack('!B',0xff)
 
 		string += struct.pack('c',b'\r')
-		# print(string)
 		result 				= ser.write(string)
-		# print(result)
+		time.sleep(0.03)
+
 		bc_ref_pos_lattitude 	+= 1
-		time.sleep(0.05)
+		pkt_no 					+= 1
 #_____________________________________(Rx)___________________________________________
 
 		if(ser.inWaiting() > 0):
@@ -134,6 +179,7 @@ def main(args=None):
 				r_hf_v_height 							= int.from_bytes(ser.read(2), "big")
 				r_hf_long_acc_val 						= int.from_bytes(ser.read(2), "big")
 				r_hf_long_acc_conf 						= int.from_bytes(ser.read(), "big")
+				ser.read()
 				r_hf_curv_val 							= int.from_bytes(ser.read(2), "big")
 				r_hf_curv_conf 							= int.from_bytes(ser.read(), "big")
 				r_hf_curv_cal_mod 						= int.from_bytes(ser.read(), "big")
@@ -147,7 +193,7 @@ def main(args=None):
 				r_uav_safetyarearadius 					= int.from_bytes(ser.read(2), "big")
 				r_uav_pathhistory_len 					= int.from_bytes(ser.read(), "big") 	# 65
 
-				# ser.read(BLE_ARRAY_MAX - (CAM_LEN + OFFSET))
+				ser.read(9)
 
 				print('______________________________________ \n \
 					pdu_proto_version - %d, \n \
@@ -226,14 +272,9 @@ def main(args=None):
 							r_uav_safetyarearadius,
 							r_uav_pathhistory_len
 						))
-				time.sleep(0.05)
-				# print(ser.read(BLE_ARRAY_MAX - OFFSET))
 			else:
 				print(ser.readline())
-				time.sleep(0.05)
 		else:
-			# print('No data bc_ref_pos_longitude %d', bc_ref_pos_longitude)
-			time.sleep(0.05)
 			continue
 
 	ser.close()

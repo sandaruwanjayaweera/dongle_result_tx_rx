@@ -316,16 +316,6 @@ int broadcaster_multiple(void)
 		.window     = 0x0030, //BT_GAP_SCAN_FAST_WINDOW,
 		.timeout 	= 0x0000, //BT_GAP_PER_ADV_MAX_TIMEOUT, 								// How long the scanner will run before stopping automatically.
 	};
-
-	struct bt_le_adv_param adv_param = {
-		.id = BT_ID_DEFAULT,
-		.sid = 0U, /* Supply unique SID when creating advertising set */
-		.secondary_max_skip = 0U,
-		.options = (BT_LE_ADV_OPT_EXT_ADV | BT_LE_ADV_OPT_USE_IDENTITY | BT_LE_ADV_OPT_USE_NAME),
-		.interval_min = BT_GAP_ADV_FAST_INT_MIN_1, //BT_GAP_ADV_FAST_INT_MIN_2,
-		.interval_max = BT_GAP_ADV_FAST_INT_MAX_1, //BT_GAP_ADV_FAST_INT_MAX_2,
-		.peer = NULL,
-	};
 	int err;
 
 	/* Initialize the Bluetooth Subsystem */
@@ -356,80 +346,6 @@ int broadcaster_multiple(void)
 	if (err) {
 		printk("Start scanning failed (err %d)\n", err);
 		return err;
-	}
-
-	/* Create a non-connectable non-scannable advertising set */
-	err = bt_le_ext_adv_create(&adv_param, NULL, &adv);
-	if (err) {
-		printk("Failed to create advertising set (err %d)\n", err);
-		return err;
-	}
-	// printk("Created advertising set.\n");
-
-	int pkt_no = 0, adv_offset = 0;
-	for (;;) {
-//_________________________________________________(Tx)_________________________________________________________________
-		struct uart_data_t *buf = k_fifo_get(&fifo_uart_rx_data, K_FOREVER);
-		if(buf){
-			// printk("UART data received.\n");
-			int offset = 0;
-			while((offset + UART_DATA_SIZE) <= buf->len){
-				// printk("buflen %d proto %d \n", buf->len, buf->data[offset]);
-				if(	buf->data[offset] == 0xff &&
-					buf->data[offset+1] == 0x00 && 
-					buf->data[offset+2] == 0xff && 
-					buf->data[offset+30] == 0xff && 
-					buf->data[offset+31] == 0xff){ 
-
-					if(pkt_no != buf->data[offset+3]){
-						adv_offset = 0;
-						// printk("lat %d buflen %d\n", buf->data[offset+15], buf->len);
-					}
-					
-					pkt_no 			= buf->data[offset+3];
-					int uart_len 	= buf->data[offset+4];
-					int adv_len		= uart_len - 7; 			// advertising data len in uart without headers
-					for (size_t i = 0; i < adv_len; i++) {
-						mfg_data[adv_offset+i+2] = buf->data[offset+i+5];
-					}
-					offset 		+= uart_len;
-					adv_offset  += adv_len;
-
-					if(adv_offset >= CAM_DATA_SIZE){
-						adv_offset = 0;
-						err = bt_le_ext_adv_set_data(adv, ad, ARRAY_SIZE(ad), NULL, 0);
-						if (err) {
-							printk("Failed to set advertising data for set (err %d)\n", err);
-						}
-
-						err = bt_le_ext_adv_start(adv, BT_LE_EXT_ADV_START_DEFAULT);
-						if (err) {
-							printk("Failed to start extended advertising set (err %d)\n", err);
-						}
-						
-						k_sleep(K_MSEC(20)); 	// stable 100 ms
-
-						bt_le_ext_adv_stop(adv);
-						if (err) {
-							printk("Advertising failed to stop (err %d)\n", err);
-						}
-					}
-				} else {
-					offset += 1;
-				}
-			}
-			k_free(buf);
-		}
-//_________________________________________________(Rx)_________________________________________________________________
-		// err = bt_le_scan_start(&scan_param, device_found);
-		// if (err) {
-		// 	printk("Start scanning failed (err %d)\n", err);
-		// 	return err;
-		// }
-		// // printk("Started scanning...\n");
-		// k_sleep(K_MSEC(10));
-		// err = bt_le_scan_stop();
-
 	}
 
 	return 0;

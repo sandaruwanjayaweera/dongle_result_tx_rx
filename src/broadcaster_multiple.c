@@ -80,7 +80,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 		break;
 
 	case UART_RX_RDY:
-		// printk("UART_RX_RDY\n");
+		printk("UART_RX_RDY\n");
 		buf = CONTAINER_OF(evt->data.rx.buf, struct uart_data_t, data);
 		buf->len += evt->data.rx.len;
 
@@ -90,6 +90,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 
 		if ((evt->data.rx.buf[buf->len - 1] == '\n') ||
 		    (evt->data.rx.buf[buf->len - 1] == '\r')) {
+			printk("uart rx disable\n");	
 			disable_req = true;
 			uart_rx_disable(uart);
 		}
@@ -260,37 +261,33 @@ int broadcaster_multiple(void)
 	}
 	// printk("Created advertising set.\n");
 
-	int pkt_no = 0, adv_offset = 0;
+	int start_flag = 0, adv_offset = 0, end_flag = 0;
+	int cur_state = 0;
+	int uart_len = 0, uart_count = 0;
 	for (;;) {
 //_________________________________________________(Tx)_________________________________________________________________
 		struct uart_data_t *buf = k_fifo_get(&fifo_uart_rx_data, K_FOREVER);
 		if(buf){
 			// printk("UART data received.\n");
 			int offset = 0;
-			while((offset + UART_DATA_SIZE) <= buf->len){
-				// printk("buflen %d proto %d \n", buf->len, buf->data[offset]);
-				if(	buf->data[offset] == 0xff &&
-					buf->data[offset+1] == 0x00 && 
-					buf->data[offset+2] == 0xff && 
-					buf->data[offset+30] == 0xff && 
-					buf->data[offset+31] == 0xff){ 
+			if(false){
+				k_free(buf);
+			} else {
 
-					if(pkt_no != buf->data[offset+3]){
-						adv_offset = 0;
-						// printk("lat %d buflen %d\n", buf->data[offset+15], buf->len);
-					}
-					
-					pkt_no 			= buf->data[offset+3];
-					int uart_len 	= buf->data[offset+4];
-					int adv_len		= uart_len - 7; 			// advertising data len in uart without headers
-					for (size_t i = 0; i < adv_len; i++) {
-						mfg_data[adv_offset+i+2] = buf->data[offset+i+5];
-					}
-					offset 		+= uart_len;
-					adv_offset  += adv_len;
+				while(offset < (buf->len)){
 
-					if(adv_offset >= CAM_DATA_SIZE){
-						adv_offset = 0;
+					if(cur_state == 6 && buf->data[offset] == 0xff){
+						cur_state 	= 0;
+						end_flag  	= 1;
+						adv_offset 	= 0;
+
+						if(start_flag){
+							bt_le_ext_adv_stop(adv);
+							if (err) {
+								printk("Advertising failed to stop (err %d)\n", err);
+							}
+						}
+
 						err = bt_le_ext_adv_set_data(adv, ad, ARRAY_SIZE(ad), NULL, 0);
 						if (err) {
 							printk("Failed to set advertising data for set (err %d)\n", err);
@@ -300,19 +297,70 @@ int broadcaster_multiple(void)
 						if (err) {
 							printk("Failed to start extended advertising set (err %d)\n", err);
 						}
-						
-						k_sleep(K_MSEC(20)); 	// stable 100 ms
-
-						bt_le_ext_adv_stop(adv);
-						if (err) {
-							printk("Advertising failed to stop (err %d)\n", err);
-						}
+						start_flag 	= 1;
+						// printk("state 6 buflen %d offset %d\n", buf->len, offset);
 					}
-				} else {
+					if(cur_state == 5 && buf->data[offset] == 0xff){
+						cur_state 	= 6;
+						// printk("state 5 buflen %d offset %d\n", buf->len, offset);
+					}
+					if(cur_state == 4){
+						mfg_data[adv_offset+2] = buf->data[offset];
+
+						if(adv_offset == 30 || adv_offset == 31 || adv_offset == 32 || adv_offset == 33 || adv_offset == 34 || adv_offset == 35 || adv_offset == 36 || adv_offset == 37 || adv_offset == 38 || adv_offset == 39){
+							printk("state 4 miss %d %d %d offset %d buflen %d uartcnt %d\n", buf->data[offset], buf->data[offset+1], buf->data[offset+2], offset, buf->len, uart_count);
+						}
+
+						uart_count++;
+						adv_offset++;
+
+						if(uart_count + 6 >= uart_len){
+							cur_state 	= 5;
+							uart_count 	= 0;
+							adv_offset 	= 0;
+							// printk("state 4 buflen %d offset %d\n", buf->len, offset);
+						}
+						// printk("state 4 buflen %d uartlen %d offset %d adv %d\n", buf->len, uart_len, offset, adv_offset);
+					}
+					if(cur_state == 3){
+						cur_state 	= 4;
+						uart_len 	= buf->data[offset];
+						for(int i = 0; i<BLE_ARRAY_MAX; i++){
+							mfg_data[i] = 0x00;
+						}
+						// printk("state 3 buflen %d offset %d\n", buf->len, offset);
+					}
+					if(cur_state == 2){
+						if(buf->data[offset] == 0xff){
+							cur_state 	= 3;
+						} else {
+							cur_state 	= 0;
+						}
+						// printk("state 2 buflen %d offset %d\n", buf->len, offset);
+					}
+					if(cur_state == 1){
+						if(buf->data[offset] == 0x00){
+							cur_state 	= 2;
+						} else{
+							cur_state 	= 0;
+						}
+						// printk("state 1 buflen %d offset %d\n", buf->len, offset);
+					}
+					if(end_flag == 1){
+						end_flag = 0;
+						offset += 1;
+						continue;
+					}
+					if(cur_state == 0 && buf->data[offset] == 0xff){
+						cur_state 	= 1;
+						// printk("state 0 buflen %d offset %d\n", buf->len, offset);
+					}
+
 					offset += 1;
 				}
+				k_free(buf);
+
 			}
-			k_free(buf);
 		}
 //_________________________________________________(Rx)_________________________________________________________________
 		// err = bt_le_scan_start(&scan_param, device_found);

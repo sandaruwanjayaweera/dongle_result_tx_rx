@@ -15,7 +15,11 @@ void setup() {
 }
 
 void loop() {
-    while (Serial2.available()) {
+  uint8_t uart_len 			  = 32;
+  // byte recv_msg[uart_len];
+  while (Serial2.available()) {
+    // Serial2.readBytes(recv_msg, 65);
+    // Serial.print(recv_msg[0]);
     Serial.print(char(Serial2.read()));
   }
   // digitalWrite(22, HIGH);
@@ -64,9 +68,6 @@ void loop() {
 
   uav_safetyarearadius.bit_16 				    = 35;
   uav_pathhistory_len 				            = 36;
-
-
-  uint8_t uart_len 			  = 32;
 
   byte msg[uart_len];
 

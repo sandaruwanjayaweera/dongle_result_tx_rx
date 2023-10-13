@@ -279,7 +279,7 @@ static void scan_recv(const struct bt_le_scan_recv_info *info,
 				data[i] = buf->data[i+4];
 			}
 			ble_data_received(data, CAM_DATA_SIZE);
-			// printk("scan success");
+			// printk("scan success\n");
 		}
 		
 	}

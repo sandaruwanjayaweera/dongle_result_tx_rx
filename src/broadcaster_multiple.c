@@ -80,17 +80,18 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 		break;
 
 	case UART_RX_RDY:
-		printk("UART_RX_RDY\n");
+		// printk("UART_RX_RDY\n");
 		buf = CONTAINER_OF(evt->data.rx.buf, struct uart_data_t, data);
 		buf->len += evt->data.rx.len;
-
+		// printk("UART_RX_RDY %d\n", buf->len);
 		if (disable_req) {
 			return;
 		}
 
-		if ((evt->data.rx.buf[buf->len - 1] == '\n') ||
-		    (evt->data.rx.buf[buf->len - 1] == '\r')) {
-			printk("uart rx disable\n");	
+		// if ((evt->data.rx.buf[buf->len - 1] == '\n') ||
+		//     (evt->data.rx.buf[buf->len - 1] == '\r')) {
+		if (buf->len >= UART_DATA_SIZE) {
+			// printk("uart rx disable\n");	
 			disable_req = true;
 			uart_rx_disable(uart);
 		}
@@ -307,9 +308,9 @@ int broadcaster_multiple(void)
 					if(cur_state == 4){
 						mfg_data[adv_offset+2] = buf->data[offset];
 
-						if(adv_offset == 30 || adv_offset == 31 || adv_offset == 32 || adv_offset == 33 || adv_offset == 34 || adv_offset == 35 || adv_offset == 36 || adv_offset == 37 || adv_offset == 38 || adv_offset == 39){
-							printk("state 4 miss %d %d %d offset %d buflen %d uartcnt %d\n", buf->data[offset], buf->data[offset+1], buf->data[offset+2], offset, buf->len, uart_count);
-						}
+						// if(adv_offset == 10 || adv_offset == 30 || adv_offset == 31 || adv_offset == 32 || adv_offset == 33 || adv_offset == 34 || adv_offset == 35 || adv_offset == 36 || adv_offset == 37 || adv_offset == 38 || adv_offset == 39){
+						// 	printk("state 4 miss %d %d %d offset %d buflen %d uartcnt %d\n", buf->data[offset], buf->data[offset+1], buf->data[offset+2], offset, buf->len, uart_count);
+						// }
 
 						uart_count++;
 						adv_offset++;

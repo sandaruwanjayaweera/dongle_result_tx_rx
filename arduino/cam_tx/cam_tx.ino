@@ -18,9 +18,9 @@ void loop() {
   uint8_t recv_len 			  = 65;
   byte recv_msg[recv_len];
     while (Serial2.available()) {
-    // Serial.print(char(Serial2.read()));
-    int recv_size = Serial2.readBytes(recv_msg, recv_len);
-    Serial.println(recv_msg[0]);
+    Serial.print(char(Serial2.read()));
+    // int recv_size = Serial2.readBytes(recv_msg, recv_len);
+    // Serial.println(recv_msg[0]);
   }
   // digitalWrite(22, HIGH);
   // delay(100);

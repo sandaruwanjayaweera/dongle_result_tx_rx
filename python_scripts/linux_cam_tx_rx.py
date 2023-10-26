@@ -15,7 +15,7 @@ def main(args=None):
 #_____________________________________(Tx)___________________________________________
 
 		ser.reset_output_buffer()
-		uart_len 			= 65
+		uart_len 			= 71
 
 		pdu_proto_version 	= 1
 		pdu_message_id 		= 2
@@ -63,11 +63,12 @@ def main(args=None):
 		string += struct.pack('!B',0x00)
 		string += struct.pack('!B',0xff)
 		string += struct.pack('!B',pkt_no)
-		string += struct.pack('!B',32)
+		string += struct.pack('!B',uart_len)
 
 		string += struct.pack('!B',pdu_proto_version)
 		string += struct.pack('!B',pdu_message_id)
 		string += struct.pack('!I',pdu_src_station_id)
+
 		string += struct.pack('!B',bc_station_type)
 		string += struct.pack('!I',bc_ref_pos_lattitude)
 		string += struct.pack('!I',bc_ref_pos_longitude)
@@ -75,23 +76,8 @@ def main(args=None):
 		string += struct.pack('!H',bc_ref_pos_conf_ellipse_semi_minor)
 		string += struct.pack('!H',bc_ref_pos_altitude_heading)
 		string += struct.pack('!I',bc_ref_pos_altitude_val)
-
-		string += struct.pack('!B',0xff)
-		string += struct.pack('!B',0xff)
-
-		string += struct.pack('c',b'\r')
-		result 				= ser.write(string)
-		time.sleep(0.03)
-
-		string 				= b''
-
-		string += struct.pack('!B',0xff)
-		string += struct.pack('!B',0x00)
-		string += struct.pack('!B',0xff)
-		string += struct.pack('!B',pkt_no)
-		string += struct.pack('!B',32)
-
 		string += struct.pack('!B',bc_ref_pos_altitude_conf)
+
 		string += struct.pack('!H',hf_heading_val)
 		string += struct.pack('!B',hf_heading_conf)
 		string += struct.pack('!H',hf_vertical_heading)
@@ -106,23 +92,6 @@ def main(args=None):
 		string += struct.pack('!H',hf_v_height)
 		string += struct.pack('!H',hf_long_acc_val)
 		string += struct.pack('!B',hf_long_acc_conf)
-		string += struct.pack('!B',0)
-
-		string += struct.pack('!B',0xff)
-		string += struct.pack('!B',0xff)
-
-		string += struct.pack('c',b'\r')
-		result 				= ser.write(string)
-		time.sleep(0.03)
-
-		string 				= b''
-
-		string += struct.pack('!B',0xff)
-		string += struct.pack('!B',0x00)
-		string += struct.pack('!B',0xff)
-		string += struct.pack('!B',pkt_no)
-		string += struct.pack('!B',32)
-
 		string += struct.pack('!H',hf_curv_val)
 		string += struct.pack('!B',hf_curv_conf)
 		string += struct.pack('!B',hf_curv_cal_mod)
@@ -135,16 +104,13 @@ def main(args=None):
 
 		string += struct.pack('!H',uav_safetyarearadius)
 		string += struct.pack('!B',uav_pathhistory_len)
-		string += struct.pack('!I',0)
-		string += struct.pack('!I',0)
-		string += struct.pack('!B',0)
 
 		string += struct.pack('!B',0xff)
 		string += struct.pack('!B',0xff)
 
 		string += struct.pack('c',b'\r')
 		result 				= ser.write(string)
-		time.sleep(0.03)
+		time.sleep(0.1)
 
 		bc_ref_pos_lattitude 	+= 1
 		pkt_no 					+= 1

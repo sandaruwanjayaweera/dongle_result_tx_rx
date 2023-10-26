@@ -226,7 +226,7 @@ void loop() {
   msg[70] = 0xff;
 
   Serial2.write(msg, uart_len);
-  delay(1000);
+  // delay(500);
   // Serial.println(bytesSent);
   // Serial2.write(0x01);
   // Serial.print(char(Serial2.read()));

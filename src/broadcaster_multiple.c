@@ -91,7 +91,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 		// if ((evt->data.rx.buf[buf->len - 1] == '\n') ||
 		//     (evt->data.rx.buf[buf->len - 1] == '\r')) {
 		if (buf->len >= UART_DATA_SIZE) {
-			// printk("uart rx disable\n");	
+			// printk("uart rx disable %d init %d %d %d __ %d\n", buf->len, buf->data[0], buf->data[1], buf->data[2], buf->data[14]);	
 			disable_req = true;
 			uart_rx_disable(uart);
 		}
@@ -112,7 +112,8 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 		}
 
 		uart_rx_enable(uart, buf->data, sizeof(buf->data),
-			       UART_RX_TIMEOUT);
+						100);
+			    //    UART_RX_TIMEOUT);
 
 		break;
 
@@ -135,8 +136,10 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 
 		if (buf->len > 0) {
 			k_fifo_put(&fifo_uart_rx_data, buf);
+			// printk("k_fifo_put\n");
 		} else {
 			k_free(buf);
+			// printk("k_free\n");
 		}
 
 		break;
@@ -269,7 +272,14 @@ int broadcaster_multiple(void)
 //_________________________________________________(Tx)_________________________________________________________________
 		struct uart_data_t *buf = k_fifo_get(&fifo_uart_rx_data, K_FOREVER);
 		if(buf){
-			// printk("UART data received.\n");
+			printk("UART data received. %d %d\n", buf->len, adv_offset);
+			// if(buf->len < 10){
+			// 	for (size_t i = 0; i < buf->len; i++)
+			// 	{
+			// 		printk("junk data. %d\n", buf->data[i]);
+			// 	}
+				
+			// }
 			int offset = 0;
 			if(false){
 				k_free(buf);
@@ -298,6 +308,7 @@ int broadcaster_multiple(void)
 						if (err) {
 							printk("Failed to start extended advertising set (err %d)\n", err);
 						}
+						// k_sleep(K_MSEC(10));
 						start_flag 	= 1;
 						// printk("state 6 buflen %d offset %d\n", buf->len, offset);
 					}
@@ -308,9 +319,9 @@ int broadcaster_multiple(void)
 					if(cur_state == 4){
 						mfg_data[adv_offset+2] = buf->data[offset];
 
-						// if(adv_offset == 10 || adv_offset == 30 || adv_offset == 31 || adv_offset == 32 || adv_offset == 33 || adv_offset == 34 || adv_offset == 35 || adv_offset == 36 || adv_offset == 37 || adv_offset == 38 || adv_offset == 39){
-						// 	printk("state 4 miss %d %d %d offset %d buflen %d uartcnt %d\n", buf->data[offset], buf->data[offset+1], buf->data[offset+2], offset, buf->len, uart_count);
-						// }
+						if(/*adv_offset == 1 || adv_offset == 2 || adv_offset == 3  || adv_offset == 4 || adv_offset == 5 ||*/ adv_offset == 10 /*|| adv_offset == 30 || adv_offset == 31 || adv_offset == 32 || adv_offset == 33 || adv_offset == 34 || adv_offset == 35 || adv_offset == 36 || adv_offset == 37 || adv_offset == 38 || adv_offset == 39*/){
+							printk("state 4 miss %d %d %d offset %d buflen %d uartcnt %d\n", buf->data[offset], buf->data[offset+1], buf->data[offset+2], offset, buf->len, uart_count);
+						}
 
 						uart_count++;
 						adv_offset++;
@@ -354,7 +365,7 @@ int broadcaster_multiple(void)
 					}
 					if(cur_state == 0 && buf->data[offset] == 0xff){
 						cur_state 	= 1;
-						// printk("state 0 buflen %d offset %d\n", buf->len, offset);
+						printk("state 0 buflen %d offset %d\n", buf->len, offset);
 					}
 
 					offset += 1;

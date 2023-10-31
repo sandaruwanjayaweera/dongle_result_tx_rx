@@ -268,6 +268,7 @@ int broadcaster_multiple(void)
 	int start_flag = 0, adv_offset = 0, end_flag = 0;
 	int cur_state = 0;
 	int uart_len = 0, uart_count = 0;
+	uint8_t pkt_count = 0;
 	for (;;) {
 //_________________________________________________(Tx)_________________________________________________________________
 		struct uart_data_t *buf = k_fifo_get(&fifo_uart_rx_data, K_FOREVER);
@@ -317,7 +318,7 @@ int broadcaster_multiple(void)
 						// printk("state 5 buflen %d offset %d\n", buf->len, offset);
 					}
 					if(cur_state == 4){
-						mfg_data[adv_offset+2] = buf->data[offset];
+						mfg_data[adv_offset+3] = buf->data[offset];
 
 						if(/*adv_offset == 1 || adv_offset == 2 || adv_offset == 3  || adv_offset == 4 || adv_offset == 5 ||*/ adv_offset == 10 /*|| adv_offset == 30 || adv_offset == 31 || adv_offset == 32 || adv_offset == 33 || adv_offset == 34 || adv_offset == 35 || adv_offset == 36 || adv_offset == 37 || adv_offset == 38 || adv_offset == 39*/){
 							printk("state 4 miss %d %d %d offset %d buflen %d uartcnt %d\n", buf->data[offset], buf->data[offset+1], buf->data[offset+2], offset, buf->len, uart_count);
@@ -340,6 +341,8 @@ int broadcaster_multiple(void)
 						for(int i = 0; i<BLE_ARRAY_MAX; i++){
 							mfg_data[i] = 0x00;
 						}
+						mfg_data[2] = pkt_count;
+						pkt_count++;
 						// printk("state 3 buflen %d offset %d\n", buf->len, offset);
 					}
 					if(cur_state == 2){

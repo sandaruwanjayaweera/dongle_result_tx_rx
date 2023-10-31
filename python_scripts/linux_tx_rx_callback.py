@@ -2,60 +2,115 @@ import serial
 import struct
 import time
 
+class SerialWrapper:
+
+	uart_len 			= 0
+
+	pdu_proto_version 	= 0
+	pdu_message_id 		= 0
+	pdu_src_station_id 	= 0
+
+	bc_station_type 					= 0
+	bc_ref_pos_lattitude 				= 0
+	bc_ref_pos_longitude 				= 0
+	bc_ref_pos_conf_ellipse_semi_major 	= 0
+	bc_ref_pos_conf_ellipse_semi_minor 	= 0
+	bc_ref_pos_altitude_heading 		= 0
+	bc_ref_pos_altitude_val 			= 0
+	bc_ref_pos_altitude_conf 			= 0
+
+	hf_heading_val 						= 0
+	hf_heading_conf  					= 0
+	hf_vertical_heading 				= 0
+	hf_speed_val 						= 0
+	hf_speed_conf 						= 0
+	hf_drive_dir_heading_val 			= 0
+	hf_drive_dir_heading_conf 			= 0
+	hf_drive_dir_vertical_heading 		= 0
+	hf_v_len_val 						= 0
+	hf_v_len_conf 						= 0
+	hf_v_width 							= 0
+	hf_v_height 						= 0
+	hf_long_acc_val 					= 0
+	hf_long_acc_conf 					= 0
+	hf_curv_val 						= 0
+	hf_curv_conf 						= 0
+	hf_curv_cal_mod 					= 0
+	hf_yaw_r_val 						= 0
+	hf_yaw_r_conf 						= 0
+	hf_lat_acc_val 						= 0
+	hf_lat_acc_conf 					= 0
+	hf_vertical_acc_val 				= 0
+	hf_vertical_acc_conf 				= 0
+
+	uav_safetyarearadius 				= 0
+	uav_pathhistory_len 				= 0
+
+    def __init__(self, device):
+        self.ser = serial.Serial(device, 115200)
+        timer_period = 1
+        self.timer = self.create_timer(timer_period, self.sendData)
+
+    def sendData(self):
+
+		self.uart_len 								= 71
+
+		self.pdu_proto_version 						= 1
+		self.pdu_message_id 						= 2
+		self.pdu_src_station_id 					= 2
+
+		self.bc_station_type 						= 4
+		self.bc_ref_pos_lattitude 					= 5
+		self.bc_ref_pos_longitude 					= 6
+		self.bc_ref_pos_conf_ellipse_semi_major 	= 7
+		self.bc_ref_pos_conf_ellipse_semi_minor 	= 8
+		self.bc_ref_pos_altitude_heading 			= 9
+		self.bc_ref_pos_altitude_val 				= 10
+		self.bc_ref_pos_altitude_conf 				= 11
+
+		self.hf_heading_val 						= 12
+		self.hf_heading_conf  						= 13
+		self.hf_vertical_heading 					= 14
+		self.hf_speed_val 							= 15
+		self.hf_speed_conf 							= 16
+		self.hf_drive_dir_heading_val 				= 17
+		self.hf_drive_dir_heading_conf 				= 18
+		self.hf_drive_dir_vertical_heading 			= 19
+		self.hf_v_len_val 							= 20
+		self.hf_v_len_conf 							= 21
+		self.hf_v_width 							= 22
+		self.hf_v_height 							= 23
+		self.hf_long_acc_val 						= 24
+		self.hf_long_acc_conf 						= 25
+		self.hf_curv_val 							= 26
+		self.hf_curv_conf 							= 27
+		self.hf_curv_cal_mod 						= 28
+		self.hf_yaw_r_val 							= 29
+		self.hf_yaw_r_conf 							= 30
+		self.hf_lat_acc_val 						= 31
+		self.hf_lat_acc_conf 						= 32
+		self.hf_vertical_acc_val 					= 33
+		self.hf_vertical_acc_conf 					= 34
+
+		self.uav_safetyarearadius 					= 35
+		self.uav_pathhistory_len 					= 36
+
+        self.ser.write(string)
+
+
 def main(args=None):
 
-	BLE_ARRAY_MAX 		= 227
-	CAM_LEN 			= 65
-	OFFSET 				= 3
-	ser 				= serial.Serial('/dev/ttyTHS0', 115200)
+	BLE_ARRAY_MAX 			= 227
+	CAM_LEN 				= 65
+	OFFSET 					= 3
+	ser 					= SerialWrapper('/dev/ttyTHS0')
 	bc_ref_pos_lattitude 	= 1
-	pkt_no 				= 0;
 
 	while True:
 #_____________________________________(Tx)___________________________________________
 
 		ser.reset_output_buffer()
-		uart_len 			= 71
 
-		pdu_proto_version 	= 1
-		pdu_message_id 		= 2
-		pdu_src_station_id 	= 2
-
-		bc_station_type 					= 4
-		# bc_ref_pos_lattitude 				= 5
-		bc_ref_pos_longitude 				= 6
-		bc_ref_pos_conf_ellipse_semi_major 	= 7
-		bc_ref_pos_conf_ellipse_semi_minor 	= 8
-		bc_ref_pos_altitude_heading 		= 9
-		bc_ref_pos_altitude_val 			= 10
-		bc_ref_pos_altitude_conf 			= 11
-
-		hf_heading_val 						= 12
-		hf_heading_conf  					= 13
-		hf_vertical_heading 				= 14
-		hf_speed_val 						= 15
-		hf_speed_conf 						= 16
-		hf_drive_dir_heading_val 			= 17
-		hf_drive_dir_heading_conf 			= 18
-		hf_drive_dir_vertical_heading 		= 19
-		hf_v_len_val 						= 20
-		hf_v_len_conf 						= 21
-		hf_v_width 							= 22
-		hf_v_height 						= 23
-		hf_long_acc_val 					= 24
-		hf_long_acc_conf 					= 25
-		hf_curv_val 						= 26
-		hf_curv_conf 						= 27
-		hf_curv_cal_mod 					= 28
-		hf_yaw_r_val 						= 29
-		hf_yaw_r_conf 						= 30
-		hf_lat_acc_val 						= 31
-		hf_lat_acc_conf 					= 32
-		hf_vertical_acc_val 				= 33
-		hf_vertical_acc_conf 				= 34
-
-		uav_safetyarearadius 				= 35
-		uav_pathhistory_len 				= 36
 
 		string 				= b''
 
@@ -111,7 +166,6 @@ def main(args=None):
 		time.sleep(0.1)
 
 		bc_ref_pos_lattitude 	+= 1
-		pkt_no 					+= 1
 #_____________________________________(Rx)___________________________________________
 
 		if(ser.inWaiting() > 0):

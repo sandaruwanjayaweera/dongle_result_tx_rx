@@ -318,8 +318,8 @@ int broadcaster_multiple(void)
 	struct bt_le_scan_param scan_param = {
 		.type       = BT_LE_SCAN_TYPE_PASSIVE,
 		.options    = BT_LE_SCAN_OPT_FILTER_DUPLICATE,
-		.interval   = 0x0030, //BT_GAP_SCAN_FAST_INTERVAL,
-		.window     = 0x0030, //BT_GAP_SCAN_FAST_WINDOW,
+		.interval   = 0x0640, //BT_GAP_SCAN_FAST_INTERVAL,
+		.window     = 0x0500, //BT_GAP_SCAN_FAST_WINDOW,
 		.timeout 	= 0x0000, //BT_GAP_PER_ADV_MAX_TIMEOUT, 								// How long the scanner will run before stopping automatically.
 	};
 	int err;

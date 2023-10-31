@@ -119,6 +119,8 @@ def main(args=None):
 				if(int.from_bytes(ser.read(), "big") == 0):
 					if(int.from_bytes(ser.read(), "big") == 255):
 
+						pkt_len 	= int.from_bytes(ser.read(), "big")
+
 						r_pdu_proto_version 	= int.from_bytes(ser.read(), "big")
 						r_pdu_message_id 		= int.from_bytes(ser.read(), "big")
 						r_pdu_src_station_id 	= int.from_bytes(ser.read(4), "big")					# 6

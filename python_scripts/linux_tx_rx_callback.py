@@ -110,8 +110,6 @@ def main(args=None):
 #_____________________________________(Tx)___________________________________________
 
 		ser.reset_output_buffer()
-
-
 		string 				= b''
 
 		string += struct.pack('!B',0xff)
@@ -172,6 +170,8 @@ def main(args=None):
 			if(int.from_bytes(ser.read(), "big") == 255):
 				if(int.from_bytes(ser.read(), "big") == 0):
 					if(int.from_bytes(ser.read(), "big") == 255):
+
+						pkt_len 	= int.from_bytes(ser.read(), "big")
 
 						r_pdu_proto_version 	= int.from_bytes(ser.read(), "big")
 						r_pdu_message_id 		= int.from_bytes(ser.read(), "big")

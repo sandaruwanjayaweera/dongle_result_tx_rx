@@ -120,8 +120,11 @@ def main(args=None):
 					if(int.from_bytes(ser.read(), "big") == 255):
 
 						data 		= bytearray(CAM_LEN+1)
+						crc_cal 	= 0
+
 						for i in range(CAM_LEN+1):
 							data[i] = int.from_bytes(ser.read(), "big")
+							crc_cal = crc_cal ^ data[i]
 
 						pkt_len 	= data[0]
 
@@ -253,6 +256,7 @@ def main(args=None):
 								uav_safetyarearadius - %d, \n \
 								uav_pathhistory_len - %d, \n \
 								crc - %d, \n \
+								crc_cal - %d, \n \
 								'
 									%(	r_pdu_proto_version,
 										r_pdu_message_id,
@@ -290,7 +294,8 @@ def main(args=None):
 										r_hf_vertical_acc_conf,
 										r_uav_safetyarearadius,
 										r_uav_pathhistory_len,
-										crc
+										crc,
+										crc_cal
 									))
 						else:
 							continue

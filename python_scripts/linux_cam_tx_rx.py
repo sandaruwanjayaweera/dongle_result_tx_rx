@@ -214,7 +214,7 @@ def main(args=None):
 
 						crc 									= int.from_bytes(ser.read(), "big")
 						end_flag 								= int.from_bytes(ser.read(), "big")
-						if(end_flag == 255):
+						if(end_flag == 255 and crc == crc_cal):
 
 							print('______________________________________ \n \
 								pdu_proto_version - %d, \n \
@@ -255,8 +255,6 @@ def main(args=None):
 								\n \
 								uav_safetyarearadius - %d, \n \
 								uav_pathhistory_len - %d, \n \
-								crc - %d, \n \
-								crc_cal - %d, \n \
 								'
 									%(	r_pdu_proto_version,
 										r_pdu_message_id,
@@ -293,9 +291,7 @@ def main(args=None):
 										r_hf_vertical_acc_val,
 										r_hf_vertical_acc_conf,
 										r_uav_safetyarearadius,
-										r_uav_pathhistory_len,
-										crc,
-										crc_cal
+										r_uav_pathhistory_len
 									))
 						else:
 							continue

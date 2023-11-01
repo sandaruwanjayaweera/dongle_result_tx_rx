@@ -288,10 +288,12 @@ static void scan_recv(const struct bt_le_scan_recv_info *info,
 			data[1] = 0x00;
 			data[2] = 0xff;
 			data[3] = CAM_DATA_SIZE + 6;
+			uint8_t crc = data[3];
 			for (size_t i = 0; i < CAM_DATA_SIZE; i++) {
 				data[i+4] = buf->data[i+5];
+				crc = crc ^ data[i+4];
 			}
-			data[CAM_DATA_SIZE + 4] = 0xff;
+			data[CAM_DATA_SIZE + 4] = crc;
 			data[CAM_DATA_SIZE + 5] = 0xff;
 			ble_data_received(data, CAM_DATA_SIZE+6);
 			// printk("scan success\n");

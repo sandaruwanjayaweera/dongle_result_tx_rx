@@ -293,7 +293,7 @@ def main(args=None):
 										crc
 									))
 						else:
-
+							continue
 					else:
 						continue
 				else:

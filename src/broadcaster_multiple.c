@@ -255,6 +255,9 @@ static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
 	bt_addr_le_to_str(addr, addr_str, sizeof(addr_str));
 }
 
+
+uint8_t pkt_count = 0;
+union pdu_src_station_id_t pdu_src_station_id_r = { .bit_32 = 0 };
 static void scan_recv(const struct bt_le_scan_recv_info *info,
 		      struct net_buf_simple *buf)
 {
@@ -273,14 +276,20 @@ static void scan_recv(const struct bt_le_scan_recv_info *info,
 	bt_addr_le_to_str(info->addr, le_addr, sizeof(le_addr));
 
 	if(info->addr->a.val[5] == 242 && info->addr->a.val[4] == 69 && info->addr->a.val[3] == 194 && info->addr->a.val[2] == 29 && info->addr->a.val[1] == 179 && info->addr->a.val[0] == 70){	
-		if(buf->data[4] == 1 && buf->data[5] == 2){
+		// if(buf->data[5] == 1 && buf->data[6] == 2){ 	// pdu_proto_version pdu_message_id
+		if(!(pdu_src_station_id_r.bit_32 == ((buf->data[7]<<24) + (buf->data[8]<<16) + (buf->data[9]<<8) + buf->data[10]) && buf->data[4] == pkt_count)){ 	// pkt_count
+			pkt_count 	= buf->data[4];
+			pdu_src_station_id_r.bit_8[3]	= buf->data[7];
+			pdu_src_station_id_r.bit_8[2]	= buf->data[8];
+			pdu_src_station_id_r.bit_8[1] 	= buf->data[9];
+			pdu_src_station_id_r.bit_8[0] 	= buf->data[10];
 			uint8_t data[BLE_ARRAY_MAX];
 			data[0] = 0xff;
 			data[1] = 0x00;
 			data[2] = 0xff;
 			data[3] = CAM_DATA_SIZE + 6;
 			for (size_t i = 0; i < CAM_DATA_SIZE; i++) {
-				data[i+4] = buf->data[i+4];
+				data[i+4] = buf->data[i+5];
 			}
 			data[CAM_DATA_SIZE + 4] = 0xff;
 			data[CAM_DATA_SIZE + 5] = 0xff;
@@ -318,8 +327,8 @@ int broadcaster_multiple(void)
 	struct bt_le_scan_param scan_param = {
 		.type       = BT_LE_SCAN_TYPE_PASSIVE,
 		.options    = BT_LE_SCAN_OPT_FILTER_DUPLICATE,
-		.interval   = 0x0640, //BT_GAP_SCAN_FAST_INTERVAL,
-		.window     = 0x0500, //BT_GAP_SCAN_FAST_WINDOW,
+		.interval   = 0x0030, //BT_GAP_SCAN_FAST_INTERVAL,
+		.window     = 0x0030, //BT_GAP_SCAN_FAST_WINDOW,
 		.timeout 	= 0x0000, //BT_GAP_PER_ADV_MAX_TIMEOUT, 								// How long the scanner will run before stopping automatically.
 	};
 	int err;

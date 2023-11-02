@@ -99,7 +99,7 @@ void loop() {
   // digitalWrite(22, LOW);
   // delay(100);
   static unsigned long lastMillis = 0;
-  if(millis() - lastMillis >= 1000){
+  if(millis() - lastMillis >= 100){
 
     lastMillis = millis();
     Serial.println("Sent lattitude: "+String(bc_ref_pos_lattitude.bit_32) + " " + String(lastMillis));

@@ -131,8 +131,9 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 			return;
 		}
 
-		if ((evt->data.rx.buf[buf->len - 1] == '\n') ||
-		    (evt->data.rx.buf[buf->len - 1] == '\r')) {
+		// if ((evt->data.rx.buf[buf->len - 1] == '\n') ||
+		//     (evt->data.rx.buf[buf->len - 1] == '\r')) {
+		if (buf->len >= UART_DATA_SIZE) {
 			disable_req = true;
 			uart_rx_disable(uart);
 		}
@@ -153,7 +154,8 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 		}
 
 		uart_rx_enable(uart, buf->data, sizeof(buf->data),
-			       UART_RX_TIMEOUT);
+									100);
+			    //    UART_RX_TIMEOUT);
 
 		break;
 
@@ -325,6 +327,15 @@ void ble_set_mac(bt_addr_t* addr) {
 
 int broadcaster_multiple(void)
 {
+	struct bt_le_adv_param adv_param = {
+		.id = BT_ID_DEFAULT,
+		.sid = 0U, /* Supply unique SID when creating advertising set */
+		.secondary_max_skip = 0U,
+		.options = (BT_LE_ADV_OPT_EXT_ADV | BT_LE_ADV_OPT_USE_IDENTITY | BT_LE_ADV_OPT_USE_NAME | BT_LE_ADV_OPT_DISABLE_CHAN_38 | BT_LE_ADV_OPT_DISABLE_CHAN_39),
+		.interval_min = BT_GAP_ADV_FAST_INT_MIN_1, //BT_GAP_ADV_FAST_INT_MIN_2,
+		.interval_max = BT_GAP_ADV_FAST_INT_MAX_1, //BT_GAP_ADV_FAST_INT_MAX_2,
+		.peer = NULL,
+	};
 
 	struct bt_le_scan_param scan_param = {
 		.type       = BT_LE_SCAN_TYPE_PASSIVE,
@@ -363,6 +374,128 @@ int broadcaster_multiple(void)
 	if (err) {
 		printk("Start scanning failed (err %d)\n", err);
 		return err;
+	}
+
+	/* Create a non-connectable non-scannable advertising set */
+	err = bt_le_ext_adv_create(&adv_param, NULL, &adv);
+	if (err) {
+		printk("Failed to create advertising set (err %d)\n", err);
+		return err;
+	}
+	// printk("Created advertising set.\n");
+
+	int start_flag = 0, adv_offset = 0, end_flag = 0;
+	int cur_state = 0;
+	int uart_len = 0, uart_count = 0;
+	uint8_t pkt_count = 0;
+	for (;;) {
+//_________________________________________________(Tx)_________________________________________________________________
+		struct uart_data_t *buf = k_fifo_get(&fifo_uart_rx_data, K_FOREVER);
+		if(buf){
+			printk("UART data received. %d %d\n", buf->len, adv_offset);
+			// if(buf->len < 10){
+			// 	for (size_t i = 0; i < buf->len; i++)
+			// 	{
+			// 		printk("junk data. %d\n", buf->data[i]);
+			// 	}
+				
+			// }
+			int offset = 0;
+			if(false){
+				k_free(buf);
+			} else {
+
+				while(offset < (buf->len)){
+
+					if(cur_state == 6 && buf->data[offset] == 0xff){
+						cur_state 	= 0;
+						end_flag  	= 1;
+						adv_offset 	= 0;
+
+						if(start_flag){
+							bt_le_ext_adv_stop(adv);
+							if (err) {
+								printk("Advertising failed to stop (err %d)\n", err);
+							}
+						}
+
+						err = bt_le_ext_adv_set_data(adv, ad, ARRAY_SIZE(ad), NULL, 0);
+						if (err) {
+							printk("Failed to set advertising data for set (err %d)\n", err);
+						}
+
+						err = bt_le_ext_adv_start(adv, BT_LE_EXT_ADV_START_DEFAULT);
+						if (err) {
+							printk("Failed to start extended advertising set (err %d)\n", err);
+						}
+						// k_sleep(K_MSEC(10));
+						start_flag 	= 1;
+						// printk("state 6 buflen %d offset %d\n", buf->len, offset);
+					}
+					if(cur_state == 5 && buf->data[offset] == 0xff){
+						cur_state 	= 6;
+						// printk("state 5 buflen %d offset %d\n", buf->len, offset);
+					}
+					if(cur_state == 4){
+						mfg_data[adv_offset+3] = buf->data[offset];
+
+						if(/*adv_offset == 1 || adv_offset == 2 || adv_offset == 3  || adv_offset == 4 || adv_offset == 5 ||*/ adv_offset == 10 /*|| adv_offset == 30 || adv_offset == 31 || adv_offset == 32 || adv_offset == 33 || adv_offset == 34 || adv_offset == 35 || adv_offset == 36 || adv_offset == 37 || adv_offset == 38 || adv_offset == 39*/){
+							printk("state 4 miss %d %d %d offset %d buflen %d uartcnt %d\n", buf->data[offset], buf->data[offset+1], buf->data[offset+2], offset, buf->len, uart_count);
+						}
+
+						uart_count++;
+						adv_offset++;
+
+						if(uart_count + 6 >= uart_len){
+							cur_state 	= 5;
+							uart_count 	= 0;
+							adv_offset 	= 0;
+							// printk("state 4 buflen %d offset %d\n", buf->len, offset);
+						}
+						// printk("state 4 buflen %d uartlen %d offset %d adv %d\n", buf->len, uart_len, offset, adv_offset);
+					}
+					if(cur_state == 3){
+						cur_state 	= 4;
+						uart_len 	= buf->data[offset];
+						for(int i = 0; i<BLE_ARRAY_MAX; i++){
+							mfg_data[i] = 0x00;
+						}
+						mfg_data[2] = pkt_count;
+						pkt_count++;
+						// printk("state 3 buflen %d offset %d\n", buf->len, offset);
+					}
+					if(cur_state == 2){
+						if(buf->data[offset] == 0xff){
+							cur_state 	= 3;
+						} else {
+							cur_state 	= 0;
+						}
+						// printk("state 2 buflen %d offset %d\n", buf->len, offset);
+					}
+					if(cur_state == 1){
+						if(buf->data[offset] == 0x00){
+							cur_state 	= 2;
+						} else{
+							cur_state 	= 0;
+						}
+						// printk("state 1 buflen %d offset %d\n", buf->len, offset);
+					}
+					if(end_flag == 1){
+						end_flag = 0;
+						offset += 1;
+						continue;
+					}
+					if(cur_state == 0 && buf->data[offset] == 0xff){
+						cur_state 	= 1;
+						printk("state 0 buflen %d offset %d\n", buf->len, offset);
+					}
+
+					offset += 1;
+				}
+				k_free(buf);
+
+			}
+		}
 	}
 
 	return 0;

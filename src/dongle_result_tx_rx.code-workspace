@@ -1,0 +1,25 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"name": "multiple_broadcaster",
+			"path": "../../multiple_broadcaster/multiple_broadcaster"
+		}
+	],
+	"settings": {
+		"cmake.options.statusBarVisibility": "visible",
+		"cmake.options.advanced": {
+			"build": {
+				"statusBarVisibility": "visible"
+			},
+			"launch": {
+				"statusBarVisibility": "visible"
+			},
+			"debug": {
+				"statusBarVisibility": "visible"
+			}
+		}
+	}
+}
